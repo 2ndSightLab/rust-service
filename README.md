@@ -10,7 +10,9 @@ I used this code to learn the basics of rust and write a service with logging, c
 There are some missing best practices and security vulnerabilities in this code. You can read the related blog post to learn how I learned and how it all worked out in the end. This is a working program. 
 Just not production ready.
 
-Blog:
+__Blog Post:__
+
+https://medium.com/cloud-security/how-i-learned-rust-in-one-day-with-amazon-q-1398b75270c5
 
 __Variables__
 
