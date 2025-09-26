@@ -80,6 +80,9 @@ __Building and Testing__
 # Run tests
 ./test.sh
 
+# Check best practices
+best-practices.sh
+
 # Install the program
 ./install.sh
 
