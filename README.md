@@ -4,7 +4,7 @@ __Summary__
 
 A Rust service that runs and prints messages periodically with logging, configuration, security validation, and system monitoring.
 
-__Blogs__
+__Blog Posts:__
 
 Written in one day having never used rust before:\
 https://medium.com/cloud-security/how-i-learned-rust-in-one-day-with-amazon-q-1398b75270c5
@@ -12,13 +12,22 @@ https://medium.com/cloud-security/how-i-learned-rust-in-one-day-with-amazon-q-13
 Fixed on the second day to make it more production-ready by fixing security vulnerabilities and following rust best practices:\
 https://medium.com/cloud-security/getting-amazon-q-to-help-write-production-ready-rust-code-1b3146338bad
 
-__Status__
+Checking security vulnerabilities with Amazon Q:
+https://medium.com/cloud-security/using-ai-to-check-for-security-vulnerabilities-across-your-code-base-fcd48e246d04
 
-This code follows Rust best practices and has been refactored for security and maintainability. All tests pass and the code compiles without warnings.
+Turning AI security findings into repeatable, deterministic security checks:
+https://medium.com/cloud-security/turn-your-security-findings-into-automated-checks-0a08efe57358
 
-__Blog Post:__
+Preventing Q from making the same mistakes over and over again:
+https://medium.com/cloud-security/preventing-amazon-q-from-making-the-same-mistakes-over-and-over-4220c4c1a356
 
-https://medium.com/cloud-security/how-i-learned-rust-in-one-day-with-amazon-q-1398b75270c5
+Turning the service into an extensible service library anyone can use that runs their own actions:
+https://medium.com/cloud-security/an-extensible-library-anyone-can-use-to-build-a-rust-service-f88eddf9d14f
+
+__Sample Service:__
+
+This repository shows how to use this code to build your own service. This sample service prints the current time periodically:
+https://github.com/2ndSightLab/test-rust-service
 
 __Configuration Variables__
 
@@ -36,12 +45,15 @@ __Configuration Variables__
 * MAX_LOG_FILE_SIZE: Maximum log file size in bytes
 * MAX_TIME_INTERVAL: Maximum time interval in seconds
 * MAX_THRESHOLD_PERCENT: Maximum threshold percentage
+* MAX_FD_LIMIT: Maximum file descriptor limit
+* MAX_CONFIG_FIELD_LEN: Maximum configuration field length
 
 __Architecture__
 
 The code is organized into modular components:
 
 * `src/main.rs` - Application entry point and orchestration
+* `src/lib.rs` - Library interface and module exports
 * `src/config.rs` - Configuration parsing and validation
 * `src/error.rs` - Custom error types using thiserror
 * `src/logging.rs` - File logging with security checks
@@ -59,6 +71,9 @@ __Dependencies__
 * `ctrlc` - Graceful shutdown handling
 * `libc` - System calls for security checks
 * `thiserror` - Error handling
+* `users` - User information queries
+* `nix` - Unix system calls
+* `regex` - Pattern matching (dev dependency)
 
 __Functionality__
 
@@ -82,7 +97,7 @@ __Security Features__
 __Building and Testing__
 
 ```bash
-# Build (interactive script)
+# Build
 ./build.sh
 
 # Run tests

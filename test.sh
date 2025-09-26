@@ -3,44 +3,32 @@
 echo "Running Rust Service Test Suite"
 echo "==============================="
 
-# Run unit tests
-echo "Running unit tests..."
-cargo test unit_tests
-UNIT_RESULT=$?
+echo "Running all tests..."
+TEST_OUTPUT=$(cargo test 2>&1)
+TEST_RESULT=$?
+
+echo "$TEST_OUTPUT"
+
+# Extract test counts from output
+SECURITY_TESTS=$(echo "$TEST_OUTPUT" | grep -A20 "Running tests/security_checks.rs" | grep "test result: ok\." | head -1 | awk '{print $4}')
+UNIT_TESTS=$(echo "$TEST_OUTPUT" | grep -A20 "Running tests/unit_tests.rs" | grep "test result: ok\." | head -1 | awk '{print $4}')
+TOTAL_TESTS=$((SECURITY_TESTS + UNIT_TESTS))
+FAILED_TESTS=$(echo "$TEST_OUTPUT" | grep -o "[0-9]* failed" | awk '{sum += $1} END {print sum+0}')
 
 echo ""
-echo "Running security checks..."
-cargo test security_checks
-SECURITY_RESULT=$?
-
-echo ""
-echo "Running all tests (complete suite)..."
-cargo test
-ALL_RESULT=$?
-
-echo ""
+# DO NOT MODIFY: This output format is validated by unit tests
 echo "Test Results Summary:"
 echo "===================="
 
-if [ $UNIT_RESULT -eq 0 ]; then
-    echo "✅ Unit Tests: PASSED"
-else
-    echo "❌ Unit Tests: FAILED"
-fi
-
-if [ $SECURITY_RESULT -eq 0 ]; then
-    echo "✅ Security Checks: PASSED"
-else
-    echo "❌ Security Checks: FAILED"
-fi
-
-if [ $ALL_RESULT -eq 0 ]; then
-    echo "✅ Complete Test Suite: PASSED"
+if [ $TEST_RESULT -eq 0 ]; then
+    echo "✅ Security Checks: PASSED ($SECURITY_TESTS passed)"
+    echo "✅ Unit Tests: PASSED ($UNIT_TESTS passed)"
+    echo "✅ All Tests: PASSED ($TOTAL_TESTS passed, $FAILED_TESTS failed)"
     echo ""
     echo "🎉 All tests completed successfully!"
     exit 0
 else
-    echo "❌ Complete Test Suite: FAILED"
+    echo "❌ Tests: FAILED ($TOTAL_TESTS passed, $FAILED_TESTS failed)"
     echo ""
     echo "💥 Test suite failed!"
     exit 1

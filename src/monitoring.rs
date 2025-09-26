@@ -67,8 +67,10 @@ fn check_disk(THRESHOLD: u32) -> Result<(), ServiceError> {
         let STATS = statvfs(Path::new("/"))
             .map_err(|e| ServiceError::Config(format!("Cannot get disk statistics: {e}")))?;
         
-        let TOTAL = STATS.blocks() * STATS.fragment_size();
-        let AVAILABLE = STATS.blocks_available() * STATS.fragment_size();
+        let TOTAL = STATS.blocks().checked_mul(STATS.fragment_size())
+            .ok_or_else(|| ServiceError::Config("Disk total calculation overflow".to_string()))?;
+        let AVAILABLE = STATS.blocks_available().checked_mul(STATS.fragment_size())
+            .ok_or_else(|| ServiceError::Config("Disk available calculation overflow".to_string()))?;
         
         if TOTAL > 0 && AVAILABLE <= TOTAL {
             let USED = safe_subtract(TOTAL, AVAILABLE, "disk")?;

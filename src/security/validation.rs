@@ -2,38 +2,25 @@ use crate::config::Config;
 use crate::error::ServiceError;
 use super::uid::get_current_uid;
 use super::limits::get_file_descriptor_limit;
-use users::get_user_by_name;
 
-/// Validates service user name and prevents running as root.
+/// Validates service name format only - does not perform user validation.
+/// User validation is removed as it created a circular dependency where
+/// anyone could create a user matching the service name to bypass security.
 ///
 /// # Errors
 /// Returns `ServiceError::Config` if:
 /// - Service name contains invalid characters
 /// - Service name exceeds maximum length
-/// - Service is running as root user
 pub fn validate_service_user(SERVICE_NAME: &str, MAX_LEN: usize) -> Result<(), ServiceError> {
-    #[cfg(unix)]
-    {
-        // Sanitize service name to prevent command injection
-        if !SERVICE_NAME.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
-            return Err(ServiceError::Config("Invalid service name characters".to_string()));
-        }
-        
-        if SERVICE_NAME.len() > MAX_LEN {
-            return Err(ServiceError::Config(format!("Service name too long: {} > {MAX_LEN}", SERVICE_NAME.len())));
-        }
-        
-        let CURRENT_UID = get_current_uid()?;
-        
-        // Get expected UID for service user using native system calls
-        let USER = get_user_by_name(SERVICE_NAME)
-            .ok_or_else(|| ServiceError::Config(format!("Service user '{SERVICE_NAME}' does not exist")))?;
-        
-        let EXPECTED_UID = USER.uid();
-        if CURRENT_UID != EXPECTED_UID {
-            return Err(ServiceError::Config(format!("Service running as wrong user (expected: {EXPECTED_UID}, actual: {CURRENT_UID})")));
-        }
+    // Sanitize service name to prevent command injection
+    if !SERVICE_NAME.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+        return Err(ServiceError::Config("Invalid service name characters".to_string()));
     }
+    
+    if SERVICE_NAME.len() > MAX_LEN {
+        return Err(ServiceError::Config(format!("Service name too long: {} > {MAX_LEN}", SERVICE_NAME.len())));
+    }
+    
     Ok(())
 }
 

@@ -44,6 +44,7 @@ impl log::Log for FileLogger {
     fn log(&self, record: &log::Record) {
         let NOW = match SystemTime::now().duration_since(UNIX_EPOCH) {
             Ok(DURATION) => {
+                // SECURITY: Overflow protection - try_from with safe fallback prevents panics
                 u64::try_from(DURATION.as_millis()).unwrap_or(0)
             },
             Err(_) => return,
@@ -53,6 +54,7 @@ impl log::Log for FileLogger {
         let MIN_INTERVAL = get_config_value(|c| c.MIN_LOG_INTERVAL_MS, 100);
         
         let LAST_TIME = LAST_LOG_TIME.load(Ordering::Relaxed);
+        // SECURITY: saturating_sub prevents integer underflow/overflow
         if NOW.saturating_sub(LAST_TIME) < MIN_INTERVAL {
             return;
         }
@@ -81,9 +83,23 @@ impl log::Log for FileLogger {
 
 fn write_to_log_file(LOG_FILE_PATH: &str, MESSAGE: &str) -> Result<(), ServiceError> {
     let LOG_DIR = Path::new(LOG_FILE_PATH);
-    map_io_error(fs::create_dir_all(LOG_DIR), "Cannot create log directory")?;
+    
+    // Create directory if it doesn't exist
+    if !LOG_DIR.exists() {
+        fs::create_dir_all(LOG_DIR)
+            .map_err(|_| ServiceError::Config("Cannot create log directory".to_string()))?;
+    }
+    
+    // Canonicalize the existing directory
+    let CANONICAL_DIR = LOG_DIR.canonicalize()
+        .map_err(|_| ServiceError::Config("Invalid log directory path".to_string()))?;
+    
+    let ALLOWED_PREFIXES = ["/var/log", "/opt"];
+    if !ALLOWED_PREFIXES.iter().any(|prefix| CANONICAL_DIR.starts_with(prefix)) {
+        return Err(ServiceError::Config("Log directory not in allowed location".to_string()));
+    }
 
-    let LOG_FILE = LOG_DIR.join("service.log");
+    let LOG_FILE = CANONICAL_DIR.join("service.log");
     
     #[cfg(unix)]
     let FILE = {
@@ -109,29 +125,34 @@ fn write_to_log_file(LOG_FILE_PATH: &str, MESSAGE: &str) -> Result<(), ServiceEr
         use std::os::unix::io::AsRawFd;
         use std::os::unix::fs::MetadataExt;
         
-        let FD = FILE.as_raw_fd();
-        // Blocking lock (no race condition)
-        if unsafe { libc::flock(FD, libc::LOCK_EX) } != 0 {
-            return Err(ServiceError::Config("Cannot acquire file lock".to_string()));
+        // RAII guard ensures file lock is automatically released on scope exit
+        struct FileLockGuard(i32);
+        impl Drop for FileLockGuard {
+            fn drop(&mut self) {
+                // SAFETY: flock() with LOCK_UN is safe on a valid file descriptor
+                // Ignore errors on unlock as we're in destructor
+                let _ = unsafe { libc::flock(self.0, libc::LOCK_UN) };
+            }
         }
         
-        // Ensure unlock on any error after this point
-        let RESULT = (|| {
-            // SECURITY: FILE.metadata() calls fstat() on the file descriptor, not the path
-            // This prevents TOCTOU attacks since we're checking the already-opened file
-            let METADATA = map_io_error(FILE.metadata(), "Cannot get file metadata")?;
-            
-            let CURRENT_UID = crate::security::get_current_uid()
-                .map_err(|e| ServiceError::Config(format!("Cannot get current UID: {e}")))?;
-            if !METADATA.file_type().is_file() || METADATA.uid() != CURRENT_UID {
-                return Err(ServiceError::Config("Log file security check failed".to_string()));
-            }
-            Ok(())
-        })();
+        let FD = FILE.as_raw_fd();
         
-        if RESULT.is_err() {
-            unsafe { libc::flock(FD, libc::LOCK_UN) };
-            return RESULT;
+        // SAFETY: flock() is safe when called on a valid file descriptor with valid flags
+        let RESULT = unsafe { libc::flock(FD, libc::LOCK_EX) };
+        if RESULT != 0 {
+            // Get errno for better error reporting
+            let ERRNO = unsafe { *libc::__errno_location() };
+            return Err(ServiceError::Config(format!("Cannot acquire file lock: errno {}", ERRNO)));
+        }
+        let _LOCK_GUARD = FileLockGuard(FD);
+        
+        // SECURITY: FILE.metadata() calls fstat() on the file descriptor, not the path
+        let METADATA = map_io_error(FILE.metadata(), "Cannot get file metadata")?;
+        
+        let CURRENT_UID = crate::security::get_current_uid()
+            .map_err(|e| ServiceError::Config(format!("Cannot get current UID: {e}")))?;
+        if !METADATA.file_type().is_file() || METADATA.uid() != CURRENT_UID {
+            return Err(ServiceError::Config("Log file security check failed".to_string()));
         }
     }
 
@@ -140,11 +161,6 @@ fn write_to_log_file(LOG_FILE_PATH: &str, MESSAGE: &str) -> Result<(), ServiceEr
     let CURRENT_POS = map_io_error(FILE.seek(SeekFrom::End(0)), "Cannot seek file")?;
     
     if CURRENT_POS > MAX_SIZE {
-        #[cfg(unix)]
-        {
-            use std::os::unix::io::AsRawFd;
-            unsafe { libc::flock(FILE.as_raw_fd(), libc::LOCK_UN) };
-        }
         return Err(ServiceError::Config("Log file too large".to_string()));
     }
 
