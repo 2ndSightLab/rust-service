@@ -4,11 +4,12 @@ __Summary__
 
 A Rust service that runs and prints messages periodically with logging, configuration, security validation, and system monitoring.
 
+__Blogs__
+
 Written in one day having never used rust before:\
 https://medium.com/cloud-security/how-i-learned-rust-in-one-day-with-amazon-q-1398b75270c5
 
-Fixed on the second day to make it more production-ready by fixing security vulnerabilities and following rust best practices:
-
+Fixed on the second day to make it more production-ready by fixing security vulnerabilities and following rust best practices:\
 https://medium.com/cloud-security/getting-amazon-q-to-help-write-production-ready-rust-code-1b3146338bad
 
 __Status__
