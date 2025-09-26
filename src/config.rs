@@ -44,6 +44,13 @@ fn sanitize_message(message: &str, max_len: usize) -> Result<String, ServiceErro
     Ok(SANITIZED)
 }
 
+/// Loads and validates configuration from system directories.
+///
+/// # Errors
+/// Returns `ServiceError::Config` if:
+/// - No valid config file is found in system directories
+/// - Config file has invalid permissions or format
+/// - Configuration values fail validation checks
 pub fn load_config() -> Result<Config, ServiceError> {
     const ALLOWED_CONFIGS: &[&str] = &[
         "/etc/rust-service/config.toml",

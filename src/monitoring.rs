@@ -3,6 +3,10 @@ use crate::error::ServiceError;
 use log::warn;
 use std::fs;
 
+/// Checks system memory and disk usage against configured thresholds.
+///
+/// # Errors
+/// Returns `ServiceError::Config` if system resources exceed configured thresholds.
 pub fn check_resources(CONFIG: &Config) -> Result<(), ServiceError> {
     check_memory(CONFIG.MEMORY_THRESHOLD)?;
     check_disk(CONFIG.DISK_THRESHOLD)?;
@@ -55,57 +59,24 @@ fn check_memory(THRESHOLD: u32) -> Result<(), ServiceError> {
 }
 
 fn check_disk(THRESHOLD: u32) -> Result<(), ServiceError> {
-    let OUTPUT = std::process::Command::new("stat")
-        .args(["-f", "-c", "%a %b", "/"])
-        .output()
-        .map_err(|e| ServiceError::Config(format!("Cannot execute stat command for disk usage: {e}")))?;
-
-    let OUTPUT_STR = String::from_utf8_lossy(&OUTPUT.stdout);
-    let PARTS: Vec<&str> = OUTPUT_STR.split_whitespace().collect();
-    
-    if PARTS.len() == 2
-        && let (Ok(AVAILABLE), Ok(TOTAL)) = (PARTS[0].parse::<u64>(), PARTS[1].parse::<u64>())
-        && TOTAL > 0 && AVAILABLE <= TOTAL {
+    #[cfg(unix)]
+    {
+        use nix::sys::statvfs::statvfs;
+        use std::path::Path;
+        
+        let STATS = statvfs(Path::new("/"))
+            .map_err(|e| ServiceError::Config(format!("Cannot get disk statistics: {e}")))?;
+        
+        let TOTAL = STATS.blocks() * STATS.fragment_size();
+        let AVAILABLE = STATS.blocks_available() * STATS.fragment_size();
+        
+        if TOTAL > 0 && AVAILABLE <= TOTAL {
             let USED = safe_subtract(TOTAL, AVAILABLE, "disk")?;
             let USAGE_PERCENT = calculate_usage_percent(USED, TOTAL, "Disk")?;
             check_threshold_and_error(USAGE_PERCENT, THRESHOLD, "Disk")?;
         }
+    }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn parse_memory_value(LINE: &str, PREFIX: &str) -> Result<u64, ServiceError> {
-        if let Some(VALUE_STR) = LINE.strip_prefix(PREFIX).and_then(|s| s.split_whitespace().next()) {
-            VALUE_STR.parse().map_err(|_| ServiceError::Config(format!("Failed to parse memory value: {VALUE_STR}")))
-        } else {
-            Err(ServiceError::Config(format!("Invalid memory line format: {LINE}")))
-        }
-    }
-
-    #[test]
-    fn test_parse_memory_value_valid() {
-        let LINE = "MemTotal:        8000000 kB";
-        let RESULT = parse_memory_value(LINE, "MemTotal:");
-        assert!(RESULT.is_ok());
-        assert_eq!(RESULT.unwrap(), 8000000);
-    }
-
-    #[test]
-    fn test_parse_memory_value_invalid() {
-        let LINE = "MemTotal:        invalid kB";
-        let RESULT = parse_memory_value(LINE, "MemTotal:");
-        assert!(RESULT.is_err());
-    }
-
-    #[test]
-    fn test_parse_memory_value_missing_prefix() {
-        let LINE = "SomeOther:       8000000 kB";
-        let RESULT = parse_memory_value(LINE, "MemTotal:");
-        assert!(RESULT.is_err());
-    }
 }
 
 

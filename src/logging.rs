@@ -15,7 +15,8 @@ pub struct FileLogger {
 }
 
 impl FileLogger {
-    pub fn new(LOG_FILE_PATH: String) -> Self {
+    #[must_use]
+    pub const fn new(LOG_FILE_PATH: String) -> Self {
         Self { LOG_FILE_PATH }
     }
     

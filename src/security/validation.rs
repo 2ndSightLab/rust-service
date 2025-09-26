@@ -2,7 +2,15 @@ use crate::config::Config;
 use crate::error::ServiceError;
 use super::uid::get_current_uid;
 use super::limits::get_file_descriptor_limit;
+use users::get_user_by_name;
 
+/// Validates service user name and prevents running as root.
+///
+/// # Errors
+/// Returns `ServiceError::Config` if:
+/// - Service name contains invalid characters
+/// - Service name exceeds maximum length
+/// - Service is running as root user
 pub fn validate_service_user(SERVICE_NAME: &str, MAX_LEN: usize) -> Result<(), ServiceError> {
     #[cfg(unix)]
     {
@@ -17,17 +25,21 @@ pub fn validate_service_user(SERVICE_NAME: &str, MAX_LEN: usize) -> Result<(), S
         
         let CURRENT_UID = get_current_uid();
         
-        // Get expected UID for service user
-        if let Ok(OUTPUT) = std::process::Command::new("id").arg("-u").arg(SERVICE_NAME).output()
-            && OUTPUT.status.success()
-            && let Ok(EXPECTED_UID) = String::from_utf8_lossy(&OUTPUT.stdout).trim().parse::<u32>()
-            && CURRENT_UID != EXPECTED_UID {
+        // Get expected UID for service user using native system calls
+        if let Some(user) = get_user_by_name(SERVICE_NAME) {
+            let EXPECTED_UID = user.uid();
+            if CURRENT_UID != EXPECTED_UID {
                 return Err(ServiceError::Config(format!("Service running as wrong user (expected: {EXPECTED_UID}, actual: {CURRENT_UID})")));
             }
+        }
     }
     Ok(())
 }
 
+/// Validates runtime security requirements including file descriptor limits.
+///
+/// # Errors
+/// Returns `ServiceError::Config` if system file descriptor limit is below minimum requirement.
 pub fn validate_runtime_security(CONFIG: &Config) -> Result<(), ServiceError> {
     #[cfg(unix)]
     {
