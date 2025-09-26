@@ -1,6 +1,6 @@
-mod uid;
 mod limits;
+mod uid;
 mod validation;
 
-pub use validation::{validate_service_user, validate_runtime_security};
 pub use uid::get_current_uid;
+pub use validation::{validate_runtime_security, validate_service_user};

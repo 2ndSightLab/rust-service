@@ -1,6 +1,6 @@
-use rust_service::{Action, ServiceRunner, ServiceError};
-use rust_service::config::Config;
 use log::info;
+use rust_service::config::Config;
+use rust_service::{Action, ServiceError, ServiceRunner};
 
 struct MessageAction;
 
@@ -10,7 +10,7 @@ impl Action for MessageAction {
         Ok(())
     }
 
-    fn name(&self) -> &str {
+    fn name(&self) -> &'static str {
         "message"
     }
 }
@@ -20,5 +20,3 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .add_action(Box::new(MessageAction))
         .run()
 }
-
-

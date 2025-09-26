@@ -5,9 +5,6 @@ mod tests {
 
     #[test]
     fn test_no_test_code_in_src() {
-        let src_dir = Path::new("src");
-        assert!(src_dir.exists(), "src directory not found");
-        
         fn check_file_for_test_code(path: &Path) -> Vec<String> {
             let mut violations = Vec::new();
             if let Ok(content) = fs::read_to_string(path) {
@@ -20,7 +17,7 @@ mod tests {
             }
             violations
         }
-        
+
         fn walk_src_dir(dir: &Path) -> Vec<String> {
             let mut violations = Vec::new();
             if let Ok(entries) = fs::read_dir(dir) {
@@ -28,15 +25,21 @@ mod tests {
                     let path = entry.path();
                     if path.is_dir() {
                         violations.extend(walk_src_dir(&path));
-                    } else if path.extension().map_or(false, |ext| ext == "rs") {
+                    } else if path.extension().is_some_and(|ext| ext == "rs") {
                         violations.extend(check_file_for_test_code(&path));
                     }
                 }
             }
             violations
         }
-        
+
+        let src_dir = Path::new("src");
+        assert!(src_dir.exists(), "src directory not found");
+
         let violations = walk_src_dir(src_dir);
-        assert!(violations.is_empty(), "Test code found in src: {:?}", violations);
+        assert!(
+            violations.is_empty(),
+            "Test code found in src: {violations:?}"
+        );
     }
 }

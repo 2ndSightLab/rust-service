@@ -1,10 +1,20 @@
 use rust_service::error::ServiceError;
 
 fn parse_memory_value(LINE: &str, PREFIX: &str) -> Result<u64, ServiceError> {
-    LINE.strip_prefix(PREFIX).and_then(|s| s.split_whitespace().next()).map_or_else(
-        || Err(ServiceError::Config(format!("Invalid memory line format: {LINE}"))),
-        |VALUE_STR| VALUE_STR.parse().map_err(|_| ServiceError::Config(format!("Failed to parse memory value: {VALUE_STR}")))
-    )
+    LINE.strip_prefix(PREFIX)
+        .and_then(|s| s.split_whitespace().next())
+        .map_or_else(
+            || {
+                Err(ServiceError::Config(format!(
+                    "Invalid memory line format: {LINE}"
+                )))
+            },
+            |VALUE_STR| {
+                VALUE_STR.parse().map_err(|_| {
+                    ServiceError::Config(format!("Failed to parse memory value: {VALUE_STR}"))
+                })
+            },
+        )
 }
 
 #[test]

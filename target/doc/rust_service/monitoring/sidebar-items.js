@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["calculate_usage_percent","check_disk","check_memory","check_resources","check_threshold_and_error","safe_subtract"]};

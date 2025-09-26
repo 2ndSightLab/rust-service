@@ -1,0 +1,9 @@
+(function() {
+    var implementors = Object.fromEntries([["rust_service",[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.90.0/core/marker/trait.Unpin.html\" title=\"trait core::marker::Unpin\">Unpin</a> for <a class=\"enum\" href=\"rust_service/error/enum.ServiceError.html\" title=\"enum rust_service::error::ServiceError\">ServiceError</a>",1,["rust_service::error::ServiceError"]],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.90.0/core/marker/trait.Unpin.html\" title=\"trait core::marker::Unpin\">Unpin</a> for <a class=\"struct\" href=\"rust_service/config/struct.Config.html\" title=\"struct rust_service::config::Config\">Config</a>",1,["rust_service::config::Config"]],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.90.0/core/marker/trait.Unpin.html\" title=\"trait core::marker::Unpin\">Unpin</a> for <a class=\"struct\" href=\"rust_service/logging/struct.FileLogger.html\" title=\"struct rust_service::logging::FileLogger\">FileLogger</a>",1,["rust_service::logging::FileLogger"]],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/1.90.0/core/marker/trait.Unpin.html\" title=\"trait core::marker::Unpin\">Unpin</a> for <a class=\"struct\" href=\"rust_service/struct.ServiceRunner.html\" title=\"struct rust_service::ServiceRunner\">ServiceRunner</a>",1,["rust_service::ServiceRunner"]]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[1293]}
