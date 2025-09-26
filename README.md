@@ -12,21 +12,21 @@ https://medium.com/cloud-security/how-i-learned-rust-in-one-day-with-amazon-q-13
 Fixed on the second day to make it more production-ready by fixing security vulnerabilities and following rust best practices:\
 https://medium.com/cloud-security/getting-amazon-q-to-help-write-production-ready-rust-code-1b3146338bad
 
-Checking security vulnerabilities with Amazon Q:
+Checking security vulnerabilities with Amazon Q:\
 https://medium.com/cloud-security/using-ai-to-check-for-security-vulnerabilities-across-your-code-base-fcd48e246d04
 
-Turning AI security findings into repeatable, deterministic security checks:
+Turning AI security findings into repeatable, deterministic security checks:\
 https://medium.com/cloud-security/turn-your-security-findings-into-automated-checks-0a08efe57358
 
-Preventing Q from making the same mistakes over and over again:
+Preventing Q from making the same mistakes over and over again:\
 https://medium.com/cloud-security/preventing-amazon-q-from-making-the-same-mistakes-over-and-over-4220c4c1a356
 
-Turning the service into an extensible service library anyone can use that runs their own actions:
+Turning the service into an extensible service library anyone can use that runs their own actions:\
 https://medium.com/cloud-security/an-extensible-library-anyone-can-use-to-build-a-rust-service-f88eddf9d14f
 
 __Sample Service:__
 
-This repository shows how to use this code to build your own service. This sample service prints the current time periodically:
+This repository shows how to use this code to build your own service. This sample service prints the current time periodically:\
 https://github.com/2ndSightLab/test-rust-service
 
 __Configuration Variables__
