@@ -32,16 +32,16 @@ fn validate_config_field<T: PartialOrd>(value: &T, min: &T, max: &T, name: &str)
 }
 
 fn sanitize_message(message: &str, max_len: usize) -> Result<String, ServiceError> {
-    let sanitized: String = message.chars()
+    let SANITIZED: String = message.chars()
         .filter(|&c| c.is_ascii_graphic() || c == ' ')
         .take(max_len)
         .collect::<String>()
         .replace(['[', ']'], "");
     
-    if sanitized.is_empty() {
+    if SANITIZED.is_empty() {
         return Err(ServiceError::Config("Message cannot be empty after sanitization".to_string()));
     }
-    Ok(sanitized)
+    Ok(SANITIZED)
 }
 
 pub fn load_config() -> Result<Config, ServiceError> {
@@ -51,49 +51,49 @@ pub fn load_config() -> Result<Config, ServiceError> {
         "/usr/local/etc/rust-service/config.toml"
     ];
     
-    let config_path = ALLOWED_CONFIGS.iter()
+    let CONFIG_PATH = ALLOWED_CONFIGS.iter()
         .find(|&&path| Path::new(path).exists())
         .ok_or_else(|| ServiceError::Config("No valid config file found".to_string()))?;
 
-    let content = fs::read_to_string(config_path)
-        .map_err(|e| ServiceError::Config(format!("Failed to read config file {config_path}: {e}")))?;
+    let CONTENT = fs::read_to_string(CONFIG_PATH)
+        .map_err(|e| ServiceError::Config(format!("Failed to read config file {CONFIG_PATH}: {e}")))?;
     
     #[cfg(unix)]
     {
         use std::os::unix::fs::MetadataExt;
-        let metadata = fs::metadata(config_path)
-            .map_err(|e| ServiceError::Config(format!("Cannot read config file metadata for {config_path}: {e}")))?;
+        let METADATA = fs::metadata(CONFIG_PATH)
+            .map_err(|e| ServiceError::Config(format!("Cannot read config file metadata for {CONFIG_PATH}: {e}")))?;
         
-        if metadata.mode() & 0o022 != 0 {
+        if METADATA.mode() & 0o022 != 0 {
             return Err(ServiceError::Config("Config file has insecure permissions".to_string()));
         }
     }
     
-    let mut config: Config = toml::from_str(&content)
-        .map_err(|e| ServiceError::Config(format!("Invalid configuration format in {config_path}: {e}")))?;
+    let mut CONFIG: Config = toml::from_str(&CONTENT)
+        .map_err(|e| ServiceError::Config(format!("Invalid configuration format in {CONFIG_PATH}: {e}")))?;
 
     // Validate all fields using configurable limits
-    validate_config_field(&config.SERVICE_NAME.len(), &1, &config.MAX_SERVICE_NAME_LEN, "service_name")?;
-    validate_config_field(&config.MESSAGE.len(), &1, &config.MAX_MESSAGE_LEN, "message")?;
-    validate_config_field(&config.LOG_FILE_PATH.len(), &1, &config.MAX_LOG_PATH_LEN, "log_file_path")?;
-    validate_config_field(&config.TIME_INTERVAL, &1, &config.MAX_TIME_INTERVAL, "time_interval")?;
-    validate_config_field(&config.MEMORY_THRESHOLD, &1, &config.MAX_THRESHOLD_PERCENT, "memory_threshold")?;
-    validate_config_field(&config.DISK_THRESHOLD, &1, &config.MAX_THRESHOLD_PERCENT, "disk_threshold")?;
-    validate_config_field(&config.MIN_FD_LIMIT, &1, &config.MAX_FD_LIMIT, "min_fd_limit")?;
-    validate_config_field(&config.MAX_SERVICE_NAME_LEN, &1, &config.MAX_CONFIG_FIELD_LEN, "max_service_name_len")?;
-    validate_config_field(&config.MAX_MESSAGE_LEN, &1, &config.MAX_CONFIG_FIELD_LEN, "max_message_len")?;
-    validate_config_field(&config.MAX_LOG_PATH_LEN, &1, &config.MAX_CONFIG_FIELD_LEN, "max_log_path_len")?;
+    validate_config_field(&CONFIG.SERVICE_NAME.len(), &1, &CONFIG.MAX_SERVICE_NAME_LEN, "service_name")?;
+    validate_config_field(&CONFIG.MESSAGE.len(), &1, &CONFIG.MAX_MESSAGE_LEN, "message")?;
+    validate_config_field(&CONFIG.LOG_FILE_PATH.len(), &1, &CONFIG.MAX_LOG_PATH_LEN, "log_file_path")?;
+    validate_config_field(&CONFIG.TIME_INTERVAL, &1, &CONFIG.MAX_TIME_INTERVAL, "time_interval")?;
+    validate_config_field(&CONFIG.MEMORY_THRESHOLD, &1, &CONFIG.MAX_THRESHOLD_PERCENT, "memory_threshold")?;
+    validate_config_field(&CONFIG.DISK_THRESHOLD, &1, &CONFIG.MAX_THRESHOLD_PERCENT, "disk_threshold")?;
+    validate_config_field(&CONFIG.MIN_FD_LIMIT, &1, &CONFIG.MAX_FD_LIMIT, "min_fd_limit")?;
+    validate_config_field(&CONFIG.MAX_SERVICE_NAME_LEN, &1, &CONFIG.MAX_CONFIG_FIELD_LEN, "max_service_name_len")?;
+    validate_config_field(&CONFIG.MAX_MESSAGE_LEN, &1, &CONFIG.MAX_CONFIG_FIELD_LEN, "max_message_len")?;
+    validate_config_field(&CONFIG.MAX_LOG_PATH_LEN, &1, &CONFIG.MAX_CONFIG_FIELD_LEN, "max_log_path_len")?;
 
-    config.MESSAGE = sanitize_message(&config.MESSAGE, config.MAX_MESSAGE_LEN)?;
+    CONFIG.MESSAGE = sanitize_message(&CONFIG.MESSAGE, CONFIG.MAX_MESSAGE_LEN)?;
 
-    if !config.SERVICE_NAME.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
+    if !CONFIG.SERVICE_NAME.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
         return Err(ServiceError::Config("Invalid service name characters".to_string()));
     }
 
-    let log_path = Path::new(&config.LOG_FILE_PATH);
-    if !log_path.is_absolute() {
+    let LOG_PATH = Path::new(&CONFIG.LOG_FILE_PATH);
+    if !LOG_PATH.is_absolute() {
         return Err(ServiceError::Config("Log path must be absolute".to_string()));
     }
 
-    Ok(config)
+    Ok(CONFIG)
 }
