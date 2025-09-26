@@ -23,3 +23,6 @@ libc = "0.2.176"
 thiserror = "2.0.16"
 users = "0.11.0"
 nix = { version = "0.30.1", features = ["fs"] }
+
+[dev-dependencies]
+regex = "1.0"

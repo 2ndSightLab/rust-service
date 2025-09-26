@@ -23,14 +23,15 @@ pub fn validate_service_user(SERVICE_NAME: &str, MAX_LEN: usize) -> Result<(), S
             return Err(ServiceError::Config(format!("Service name too long: {} > {MAX_LEN}", SERVICE_NAME.len())));
         }
         
-        let CURRENT_UID = get_current_uid();
+        let CURRENT_UID = get_current_uid()?;
         
         // Get expected UID for service user using native system calls
-        if let Some(user) = get_user_by_name(SERVICE_NAME) {
-            let EXPECTED_UID = user.uid();
-            if CURRENT_UID != EXPECTED_UID {
-                return Err(ServiceError::Config(format!("Service running as wrong user (expected: {EXPECTED_UID}, actual: {CURRENT_UID})")));
-            }
+        let USER = get_user_by_name(SERVICE_NAME)
+            .ok_or_else(|| ServiceError::Config(format!("Service user '{SERVICE_NAME}' does not exist")))?;
+        
+        let EXPECTED_UID = USER.uid();
+        if CURRENT_UID != EXPECTED_UID {
+            return Err(ServiceError::Config(format!("Service running as wrong user (expected: {EXPECTED_UID}, actual: {CURRENT_UID})")));
         }
     }
     Ok(())
@@ -44,13 +45,13 @@ pub fn validate_runtime_security(CONFIG: &Config) -> Result<(), ServiceError> {
     #[cfg(unix)]
     {
         // Verify not running as root
-        let UID = get_current_uid();
+        let UID = get_current_uid()?;
         if UID == 0 {
             return Err(ServiceError::Config("Service should not run as root".to_string()));
         }
         
         // Check file descriptor limits using configurable minimum
-        let FD_LIMIT = get_file_descriptor_limit().map_err(ServiceError::Config)?;
+        let FD_LIMIT = get_file_descriptor_limit()?;
         if FD_LIMIT < CONFIG.MIN_FD_LIMIT {
             return Err(ServiceError::Config(format!("Insufficient file descriptor limit: {FD_LIMIT} < {}", CONFIG.MIN_FD_LIMIT)));
         }

@@ -1,12 +1,12 @@
-pub fn get_current_uid() -> u32 {
+use crate::error::ServiceError;
+
+pub fn get_current_uid() -> Result<u32, ServiceError> {
     #[cfg(unix)]
     {
-        // SAFETY: getuid() is always safe to call - it simply returns the current user ID
-        // and has no side effects or memory safety concerns
-        unsafe { libc::getuid() }
+        Ok(unsafe { libc::getuid() })
     }
     #[cfg(not(unix))]
     {
-        0
+        Err(ServiceError::Config("UID operations not supported on this platform".to_string()))
     }
 }

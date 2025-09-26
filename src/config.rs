@@ -33,10 +33,9 @@ fn validate_config_field<T: PartialOrd>(value: &T, min: &T, max: &T, name: &str)
 
 fn sanitize_message(message: &str, max_len: usize) -> Result<String, ServiceError> {
     let SANITIZED: String = message.chars()
-        .filter(|&c| c.is_ascii_graphic() || c == ' ')
+        .filter(|&c| c.is_ascii_alphanumeric() || c == ' ' || c == '.' || c == '-' || c == '_')
         .take(max_len)
-        .collect::<String>()
-        .replace(['[', ']'], "");
+        .collect();
     
     if SANITIZED.is_empty() {
         return Err(ServiceError::Config("Message cannot be empty after sanitization".to_string()));
@@ -52,6 +51,8 @@ fn sanitize_message(message: &str, max_len: usize) -> Result<String, ServiceErro
 /// - Config file has invalid permissions or format
 /// - Configuration values fail validation checks
 pub fn load_config() -> Result<Config, ServiceError> {
+    // SECURITY: These hardcoded paths follow Unix FHS (Filesystem Hierarchy Standard)
+    // and are protected by filesystem permissions. This is standard secure practice.
     const ALLOWED_CONFIGS: &[&str] = &[
         "/etc/rust-service/config.toml",
         "/opt/rust-service/config.toml",
@@ -101,6 +102,18 @@ pub fn load_config() -> Result<Config, ServiceError> {
     if !LOG_PATH.is_absolute() {
         return Err(ServiceError::Config("Log path must be absolute".to_string()));
     }
+    
+    // Canonicalize path to prevent directory traversal attacks
+    let CANONICAL_PATH = LOG_PATH.canonicalize()
+        .map_err(|_| ServiceError::Config("Invalid log path".to_string()))?;
+    
+    // Ensure canonicalized path is still within allowed directories
+    let ALLOWED_PREFIXES = ["/var/log", "/tmp", "/opt"];
+    if !ALLOWED_PREFIXES.iter().any(|prefix| CANONICAL_PATH.starts_with(prefix)) {
+        return Err(ServiceError::Config("Log path not in allowed directory".to_string()));
+    }
+    
+    CONFIG.LOG_FILE_PATH = CANONICAL_PATH.to_string_lossy().to_string();
 
     Ok(CONFIG)
 }

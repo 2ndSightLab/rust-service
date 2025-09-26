@@ -61,13 +61,12 @@ impl log::Log for FileLogger {
         // Get configurable message length limit
         let MAX_MSG_LEN = get_config_value(|c| c.MAX_MESSAGE_LEN, 500);
         
-        // Sanitize message with configurable length
+        // Sanitize message with configurable length using whitelist approach
         let ESCAPED_MSG = record.args().to_string()
             .chars()
-            .filter(|&c| c.is_ascii_graphic() || c == ' ')
+            .filter(|&c| c.is_ascii_alphanumeric() || c == ' ' || c == '.' || c == '-' || c == '_')
             .take(MAX_MSG_LEN)
-            .collect::<String>()
-            .replace(['[', ']'], "");
+            .collect::<String>();
         
         let MESSAGE = format!("[{}] [{}] {ESCAPED_MSG}", NOW / 1000, record.level());
         println!("{MESSAGE}");
@@ -78,16 +77,7 @@ impl log::Log for FileLogger {
 }
 
 
-fn get_current_uid() -> u32 {
-    #[cfg(unix)]
-    {
-        unsafe { libc::getuid() }
-    }
-    #[cfg(not(unix))]
-    {
-        0
-    }
-}
+
 
 fn write_to_log_file(LOG_FILE_PATH: &str, MESSAGE: &str) -> Result<(), ServiceError> {
     let LOG_DIR = Path::new(LOG_FILE_PATH);
@@ -125,11 +115,23 @@ fn write_to_log_file(LOG_FILE_PATH: &str, MESSAGE: &str) -> Result<(), ServiceEr
             return Err(ServiceError::Config("Cannot acquire file lock".to_string()));
         }
         
-        let METADATA = map_io_error(FILE.metadata(), "Cannot get file metadata")?;
+        // Ensure unlock on any error after this point
+        let RESULT = (|| {
+            // SECURITY: FILE.metadata() calls fstat() on the file descriptor, not the path
+            // This prevents TOCTOU attacks since we're checking the already-opened file
+            let METADATA = map_io_error(FILE.metadata(), "Cannot get file metadata")?;
+            
+            let CURRENT_UID = crate::security::get_current_uid()
+                .map_err(|e| ServiceError::Config(format!("Cannot get current UID: {e}")))?;
+            if !METADATA.file_type().is_file() || METADATA.uid() != CURRENT_UID {
+                return Err(ServiceError::Config("Log file security check failed".to_string()));
+            }
+            Ok(())
+        })();
         
-        let CURRENT_UID = get_current_uid();
-        if !METADATA.file_type().is_file() || METADATA.uid() != CURRENT_UID {
-            return Err(ServiceError::Config("Log file security check failed".to_string()));
+        if RESULT.is_err() {
+            unsafe { libc::flock(FD, libc::LOCK_UN) };
+            return RESULT;
         }
     }
 
@@ -138,6 +140,11 @@ fn write_to_log_file(LOG_FILE_PATH: &str, MESSAGE: &str) -> Result<(), ServiceEr
     let CURRENT_POS = map_io_error(FILE.seek(SeekFrom::End(0)), "Cannot seek file")?;
     
     if CURRENT_POS > MAX_SIZE {
+        #[cfg(unix)]
+        {
+            use std::os::unix::io::AsRawFd;
+            unsafe { libc::flock(FILE.as_raw_fd(), libc::LOCK_UN) };
+        }
         return Err(ServiceError::Config("Log file too large".to_string()));
     }
 
