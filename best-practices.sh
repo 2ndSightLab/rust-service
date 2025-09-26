@@ -6,6 +6,13 @@ echo "================================="
 # Exit on any error
 set -e
 
+# Get binary name from Cargo.toml
+BINARY_NAME=$(grep -A 10 "^\[\[bin\]\]" Cargo.toml | grep "^name" | head -1 | sed 's/name = "\(.*\)"/\1/' | tr -d '"')
+if [ -z "$BINARY_NAME" ]; then
+    # Fallback to package name if no explicit binary name
+    BINARY_NAME=$(grep "^name" Cargo.toml | head -1 | sed 's/name = "\(.*\)"/\1/' | tr -d '"')
+fi
+
 echo "1. Code formatting check..."
 cargo fmt --check
 
@@ -23,7 +30,7 @@ cargo tree --duplicates
 
 echo "6. Binary size analysis..."
 cargo build --release
-ls -lh target/release/rust-service
+ls -lh target/release/$BINARY_NAME
 
 echo "7. Cross-compilation check..."
 if [[ $(uname -m) == "x86_64" ]]; then
