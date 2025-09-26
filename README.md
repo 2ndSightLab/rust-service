@@ -81,7 +81,7 @@ __Building and Testing__
 ./test.sh
 
 # Check best practices
-best-practices.sh
+./best-practices.sh
 
 # Install the program
 ./install.sh
