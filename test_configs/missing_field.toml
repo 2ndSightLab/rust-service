@@ -1,3 +1,0 @@
-LOG_FILE_PATH = "/tmp/logs"
-SERVICE_NAME = "rust-service"
-MESSAGE = "Hello from rust-service"
