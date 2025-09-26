@@ -80,8 +80,11 @@ __Building and Testing__
 # Run tests
 ./test.sh
 
+# Install the program
+./install.sh
+
 # Run service
-cargo run
+./run.sh
 ```
 
 __Configuration File Locations__
