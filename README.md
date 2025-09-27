@@ -116,7 +116,8 @@ __Building and Testing__
 __Configuration File Locations__
 
 The service looks for configuration files in these locations (in order):
-1. `/etc/rust-service/config.toml`
-2. `/opt/rust-service/config.toml`
-3. `/usr/local/etc/rust-service/config.toml`
+1. `/etc/rust-service/config-service.toml` (service configuration)
+2. `/etc/rust-service/config-action.toml` (action configuration)
+3. `/opt/rust-service/config-service.toml` (service configuration)
+4. `/opt/rust-service/config-action.toml` (action configuration)
 
