@@ -1,1 +1,0 @@
-/home/ec2-user/foxy/rust-service/target/debug/rust-service: /home/ec2-user/foxy/rust-service/src/config.rs /home/ec2-user/foxy/rust-service/src/error.rs /home/ec2-user/foxy/rust-service/src/logging.rs /home/ec2-user/foxy/rust-service/src/main.rs /home/ec2-user/foxy/rust-service/src/monitoring.rs

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["load_config","sanitize_message","validate_all_config_fields","validate_config_field"],"struct":["Config"]};

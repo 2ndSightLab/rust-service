@@ -1,22 +1,14 @@
-use log::info;
-use rust_service::config::Config;
-use rust_service::{Action, ServiceError, ServiceRunner};
+pub mod action;
+pub mod security;
+pub mod service;
 
-struct MessageAction;
+pub use action::exec;
+pub use service::Config;
 
-impl Action for MessageAction {
-    fn execute(&self, config: &Config) -> Result<(), ServiceError> {
-        info!("{}", config.MESSAGE);
-        Ok(())
-    }
-
-    fn name(&self) -> &'static str {
-        "message"
-    }
-}
+use service::ServiceRunner;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    ServiceRunner::new()
-        .add_action(Box::new(MessageAction))
+    ServiceRunner::<Config>::new()
+        .add_action(exec::new()?)
         .run()
 }

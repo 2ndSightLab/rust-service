@@ -1,6 +1,7 @@
 mod security_checks {
     mod common {
         mod test_code_separation;
+        mod test_dependency_audit;
         mod test_dependency_validation;
     }
     mod app {

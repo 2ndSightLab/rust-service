@@ -5,8 +5,8 @@ mod tests {
 
     #[test]
     fn test_message_sanitization_whitelist() {
-        let config_path = Path::new("src/config.rs");
-        let logging_path = Path::new("src/logging.rs");
+        let config_path = Path::new("src/service/config.rs");
+        let logging_path = Path::new("src/service/logging.rs");
 
         assert!(
             config_path.exists() && logging_path.exists(),
@@ -19,7 +19,7 @@ mod tests {
         // Check whitelist approach in config sanitization
         assert!(
             config_content.contains(
-                "is_ascii_alphanumeric() || c == ' ' || c == '.' || c == '-' || c == '_'"
+                "is_ascii_alphanumeric() || C == ' ' || C == '.' || C == '-' || C == '_'"
             ),
             "Config sanitization not using whitelist approach"
         );

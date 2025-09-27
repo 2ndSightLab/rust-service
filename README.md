@@ -53,11 +53,11 @@ __Architecture__
 The code is organized into modular components:
 
 * `src/main.rs` - Application entry point and orchestration
-* `src/lib.rs` - Library interface and module exports
-* `src/config.rs` - Configuration parsing and validation
-* `src/error.rs` - Custom error types using thiserror
-* `src/logging.rs` - File logging with security checks
-* `src/monitoring.rs` - System resource monitoring
+* `src/service/service.rs` - Library interface and module exports
+* `src/config/config.rs` - Configuration parsing and validation
+* `src/service/error.rs` - Custom error types using thiserror
+* `src/service/logging.rs` - File logging with security checks
+* `src/service/monitoring.rs` - System resource monitoring
 * `src/security/` - Security validation modules:
   * `uid.rs` - User ID operations
   * `limits.rs` - System limits checking
@@ -98,19 +98,19 @@ __Building and Testing__
 
 ```bash
 # Build
-./build.sh
+./scripts/build.sh
 
 # Run tests
-./test.sh
+./scripts/test.sh
 
 # Check best practices
-./best-practices.sh
+./scripts/best-practices.sh
 
 # Install the program
-./install.sh
+./scripts/install.sh
 
 # Run service
-./run.sh
+./scripts/run.sh
 ```
 
 __Configuration File Locations__

@@ -1,0 +1,14 @@
+# Message to display at each interval
+MESSAGE = "Hello from rust-service"
+
+# Maximum allowed length for log messages (security limit)
+MAX_MESSAGE_LEN = 500
+
+# Interval in seconds between message outputs
+TIME_INTERVAL = 5
+
+# Default message length for fallback
+DEFAULT_MESSAGE_LEN = 500
+
+# Maximum time interval in seconds
+MAX_TIME_INTERVAL = 86400

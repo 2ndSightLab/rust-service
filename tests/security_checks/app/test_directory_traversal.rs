@@ -5,7 +5,7 @@ mod tests {
 
     #[test]
     fn test_path_canonicalization() {
-        let logging_path = Path::new("src/logging.rs");
+        let logging_path = Path::new("src/service/logging.rs");
         assert!(logging_path.exists(), "logging.rs not found");
 
         let content = fs::read_to_string(logging_path).unwrap();

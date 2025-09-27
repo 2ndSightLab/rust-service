@@ -1,2 +1,0 @@
-createSrcSidebar('[["rust_service",["",[["security",[],["limits.rs","mod.rs","uid.rs","validation.rs"]]],["config.rs","error.rs","lib.rs","logging.rs","monitoring.rs"]]]]');
-//{"start":19,"fragment_lengths":[150]}

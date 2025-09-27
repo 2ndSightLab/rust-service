@@ -5,7 +5,7 @@ mod tests {
 
     #[test]
     fn test_no_path_based_metadata_checks() {
-        let config_path = Path::new("src/config.rs");
+        let config_path = Path::new("src/service/config.rs");
         assert!(config_path.exists(), "config.rs not found");
 
         let content = fs::read_to_string(config_path).unwrap();

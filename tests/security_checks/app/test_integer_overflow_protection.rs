@@ -5,7 +5,7 @@ mod tests {
 
     #[test]
     fn test_checked_arithmetic_operations() {
-        let monitoring_path = Path::new("src/monitoring.rs");
+        let monitoring_path = Path::new("src/service/monitoring.rs");
         assert!(monitoring_path.exists(), "monitoring.rs not found");
 
         let content = fs::read_to_string(monitoring_path).unwrap();

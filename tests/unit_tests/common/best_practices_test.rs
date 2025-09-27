@@ -4,7 +4,7 @@ mod tests {
 
     #[test]
     fn test_best_practices_compliance() {
-        let output = Command::new("./best-practices.sh")
+        let output = Command::new("./scripts/best-practices.sh")
             .output()
             .expect("Failed to execute best-practices.sh");
 

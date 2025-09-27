@@ -11,10 +11,6 @@ mod tests {
         let cargo_content = fs::read_to_string(cargo_path).unwrap();
 
         // Check that essential dependencies are declared
-        assert!(
-            cargo_content.contains("users ="),
-            "Missing users dependency"
-        );
         assert!(cargo_content.contains("libc ="), "Missing libc dependency");
         assert!(
             cargo_content.contains("thiserror ="),

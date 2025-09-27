@@ -36,7 +36,7 @@ mod tests {
         );
 
         // Check logging operations
-        let logging_path = Path::new("src/logging.rs");
+        let logging_path = Path::new("src/service/logging.rs");
         assert!(logging_path.exists(), "logging.rs not found");
 
         let logging_content = fs::read_to_string(logging_path).unwrap();

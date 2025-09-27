@@ -1,4 +1,4 @@
-use rust_service::error::ServiceError;
+use rust_service::service::error::ServiceError;
 
 fn parse_memory_value(LINE: &str, PREFIX: &str) -> Result<u64, ServiceError> {
     LINE.strip_prefix(PREFIX)

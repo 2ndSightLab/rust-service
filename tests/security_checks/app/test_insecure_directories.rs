@@ -5,8 +5,8 @@ mod tests {
 
     #[test]
     fn test_no_insecure_directories() {
-        let config_path = Path::new("src/config.rs");
-        let logging_path = Path::new("src/logging.rs");
+        let config_path = Path::new("src/service/config.rs");
+        let logging_path = Path::new("src/service/logging.rs");
 
         assert!(config_path.exists(), "config.rs not found");
         assert!(logging_path.exists(), "logging.rs not found");

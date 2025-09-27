@@ -5,7 +5,7 @@ mod tests {
 
     #[test]
     fn test_file_lock_cleanup_on_error() {
-        let src_path = Path::new("src/logging.rs");
+        let src_path = Path::new("src/service/logging.rs");
         assert!(src_path.exists(), "logging.rs not found");
 
         let content = fs::read_to_string(src_path).unwrap();

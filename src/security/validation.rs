@@ -1,7 +1,7 @@
 use super::limits::get_file_descriptor_limit;
 use super::uid::get_current_uid;
-use crate::config::Config;
-use crate::error::ServiceError;
+use crate::service::config::Config;
+use crate::service::error::ServiceError;
 
 /// Validates service name format only - does not perform user validation.
 ///
@@ -16,7 +16,7 @@ pub fn validate_service_user(SERVICE_NAME: &str, MAX_LEN: usize) -> Result<(), S
     // Sanitize service name to prevent command injection
     if !SERVICE_NAME
         .chars()
-        .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+        .all(|C| C.is_alphanumeric() || C == '-' || C == '_')
     {
         return Err(ServiceError::Config(
             "Invalid service name characters".to_string(),
