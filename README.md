@@ -2,7 +2,7 @@
 
 __Summary__
 
-A Rust service library that can be used to run any service. Includes logging, configuration, and monitoring for disk space and memory usage.
+A Rust service library that can be used to run any service. Includes logging, configuration, and monitoring for disk space and memory usage limits.
 
 This service has been rewritten to be a crate only. You can see how to use it in these two projects. I tested two services to make sure there are no hard-coded dependencies:
 
