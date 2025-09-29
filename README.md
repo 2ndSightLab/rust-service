@@ -13,6 +13,20 @@ All my rust projects are going to use this common repo for global unit tests:
 
 https://github.com/2ndSightLab/rust-common-tests
 
+__Building and Testing__
+
+```bash
+# Build
+./scripts/build.sh
+
+# Run tests
+./scripts/test.sh
+
+# Check best practices
+./scripts/best-practices.sh
+
+```
+
 __Blog Posts:__
 
 Written in one day having never used rust before:\
@@ -119,25 +133,6 @@ __Security Features__
 * Validates service user identity
 * Checks system resource limits
 * Uses protected configuration file locations
-
-__Building and Testing__
-
-```bash
-# Build
-./scripts/build.sh
-
-# Run tests
-./scripts/test.sh
-
-# Check best practices
-./scripts/best-practices.sh
-
-# Install the program
-./scripts/install.sh
-
-# Run service
-./scripts/run.sh
-```
 
 __Configuration File Locations__
 
