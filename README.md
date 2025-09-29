@@ -33,6 +33,8 @@ https://medium.com/cloud-security/preventing-amazon-q-from-making-the-same-mista
 Turning the service into an extensible service library anyone can use that runs their own actions:\
 https://medium.com/cloud-security/an-extensible-library-anyone-can-use-to-build-a-rust-service-f88eddf9d14f
 
+Note that my blogs don't include splitting the service library from executable and implementaion of the common unit test repository.
+
 __Sample Service:__
 
 This repository shows how to use this code to build your own service. This sample service prints the current time periodically:\
