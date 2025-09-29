@@ -2,7 +2,31 @@
 
 __Summary__
 
-A Rust service that runs and prints messages periodically with logging, configuration, security validation, and system monitoring.
+A Rust service library that can be used to run any service. Includes logging, configuration, and monitoring for disk space and memory usage limits.
+
+This service has been rewritten to be a crate only. You can see how to use it in these two projects. I tested two services to make sure there are no hard-coded dependencies:
+
+https://github.com/2ndSightLab/test-rust-service
+
+https://github.com/2ndSightLab/test-rust-service-2
+
+All my rust projects are going to use this common repo for global unit tests:
+
+https://github.com/2ndSightLab/rust-common-tests
+
+__Building and Testing__
+
+```bash
+# Build
+./scripts/build.sh
+
+# Run tests
+./scripts/test.sh
+
+# Check best practices
+./scripts/best-practices.sh
+
+```
 
 __Blog Posts:__
 
@@ -23,6 +47,8 @@ https://medium.com/cloud-security/preventing-amazon-q-from-making-the-same-mista
 
 Turning the service into an extensible service library anyone can use that runs their own actions:\
 https://medium.com/cloud-security/an-extensible-library-anyone-can-use-to-build-a-rust-service-f88eddf9d14f
+
+Note that my blogs don't include splitting the service library from executable and implementaion of the common unit test repository.
 
 __Sample Service:__
 
@@ -108,25 +134,6 @@ __Security Features__
 * Validates service user identity
 * Checks system resource limits
 * Uses protected configuration file locations
-
-__Building and Testing__
-
-```bash
-# Build
-./scripts/build.sh
-
-# Run tests
-./scripts/test.sh
-
-# Check best practices
-./scripts/best-practices.sh
-
-# Install the program
-./scripts/install.sh
-
-# Run service
-./scripts/run.sh
-```
 
 __Configuration File Locations__
 
