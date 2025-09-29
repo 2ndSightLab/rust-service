@@ -1,5 +1,5 @@
 use crate::action::ActionConfig;
-use crate::service::config::load_action_config;
+use crate::service::config_reader::load_action_config;
 use crate::service::{Action, Config, ServiceError};
 use log::info;
 

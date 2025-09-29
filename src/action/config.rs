@@ -1,10 +1,10 @@
-use crate::service::config::validate_config_field;
+use crate::security::validation::validate_config_field;
 use crate::service::error::ServiceError;
 use serde::Deserialize;
 
 #[must_use]
 pub const fn get_config_file_name() -> &'static str {
-    "config-action.toml"
+    "action.toml"
 }
 
 #[derive(Debug, Deserialize, Clone)]

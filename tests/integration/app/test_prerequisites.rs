@@ -1,4 +1,4 @@
-use rust_service::service::config::load_config;
+use rust_service::service::config_reader::load_config;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
@@ -17,15 +17,15 @@ pub fn get_test_paths() -> Result<TestPaths, String> {
     let config_dir = &config.CONFIG_DIR;
 
     // Check if debug installation exists, otherwise use release
-    let debug_binary = format!("{install_dir}-debug/rust-service");
-    let debug_config = format!("{config_dir}-debug/config-service.toml");
+    let debug_binary = format!("{install_dir}-debug/test-rust-service");
+    let debug_config = format!("{config_dir}-debug/service.toml");
 
     let (binary_path, config_path) = if Path::new(&debug_binary).exists() {
         (debug_binary, debug_config)
     } else {
         (
-            format!("{install_dir}/rust-service"),
-            format!("{config_dir}/config-service.toml"),
+            format!("{install_dir}/test-rust-service"),
+            format!("{config_dir}/service.toml"),
         )
     };
 

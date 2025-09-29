@@ -1,10 +1,36 @@
+use rust_service::load_config;
 use rust_service::service::Config;
-use rust_service::service::config::{load_action_config, load_config};
 
 #[test]
 fn test_service_config_loading() {
-    // Test that the service config loads correctly from system directories
-    let config = load_config().expect("Should load service config from system directories");
+    // Create a test config file in the executable directory for testing
+    let exe_path = std::env::current_exe().expect("Cannot get executable path");
+    let exe_dir = exe_path.parent().expect("Cannot get executable directory");
+    let config_path = exe_dir.join("service.toml");
+    
+    // Create test config if it doesn't exist
+    if !config_path.exists() {
+        let test_config = r#"
+LOG_FILE_PATH = "/var/log/rust-service"
+INSTALL_DIR = "/opt/rust-service"
+CONFIG_DIR = "/etc/rust-service"
+SERVICE_NAME = "test-service"
+MEMORY_THRESHOLD = 80
+DISK_THRESHOLD = 75
+MIN_FD_LIMIT = 1024
+MAX_SERVICE_NAME_LEN = 32
+MAX_LOG_PATH_LEN = 500
+MIN_LOG_INTERVAL_MS = 100
+MAX_LOG_FILE_SIZE = 10485760
+MAX_TIME_INTERVAL = 86400
+MAX_THRESHOLD_PERCENT = 100
+MAX_FD_LIMIT = 65536
+MAX_CONFIG_FIELD_LEN = 2000
+"#;
+        std::fs::write(&config_path, test_config).expect("Failed to create test config");
+    }
+    
+    let config = load_config().expect("Should load service config from executable directory");
 
     // Verify required fields are present and reasonable
     assert!(
@@ -25,19 +51,7 @@ fn test_service_config_loading() {
     );
 }
 
-#[test]
-fn test_action_config_loading() {
-    // Test that the action config loads correctly from system directories
-    let config = load_action_config().expect("Should load action config from system directories");
-
-    // Verify required fields are present and reasonable
-    assert!(!config.MESSAGE.is_empty(), "Message should not be empty");
-    assert!(config.TIME_INTERVAL > 0, "Time interval should be positive");
-    assert!(
-        config.TIME_INTERVAL <= config.MAX_TIME_INTERVAL,
-        "Time interval should not exceed maximum"
-    );
-}
+// Action config test moved to test-rust-service-2 project since it's action-specific
 
 #[test]
 fn test_config_validation_valid() {

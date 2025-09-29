@@ -8,7 +8,7 @@ use std::{
     time::Duration,
 };
 
-use crate::service::config::load_config;
+use crate::service::config_reader::load_config;
 use crate::service::{ServiceError, monitoring};
 
 pub use crate::service::config::Config;
@@ -21,8 +21,13 @@ pub trait ServiceConfig: Clone + Send + Sync + 'static {
     /// Returns `ServiceError::Config` if configuration loading or validation fails.
     fn load() -> Result<Self, ServiceError>;
     fn service_name(&self) -> &str;
-    fn time_interval(&self) -> u64;
     fn log_file_path(&self) -> &str;
+
+    /// Optional time interval for periodic operations (default: 5 seconds)
+    /// Override this method only if your service needs periodic operations
+    fn time_interval(&self) -> u64 {
+        5
+    }
 }
 
 /// Action trait for extensible service functionality
@@ -68,7 +73,7 @@ impl<C: ServiceConfig> ServiceRunner<C> {
         let CONFIG = C::load()?;
 
         // Check system resources before starting
-        if let Ok(config) = crate::service::config::load_config() {
+        if let Ok(config) = crate::service::config_reader::load_config() {
             monitoring::check_resources(&config)?;
         }
 
@@ -81,7 +86,7 @@ impl<C: ServiceConfig> ServiceRunner<C> {
             }
         })?;
 
-        info!("{} starting...", CONFIG.service_name());
+        info!("Starting {}", CONFIG.service_name());
 
         while RUNNING.load(Ordering::SeqCst) {
             thread::sleep(Duration::from_secs(CONFIG.time_interval()));
@@ -110,15 +115,16 @@ impl ServiceConfig for Config {
     }
 
     fn time_interval(&self) -> u64 {
-        let ACTION_CONFIG = crate::service::config::load_action_config().unwrap_or_else(|_| {
-            crate::action::config_action::ActionConfig {
-                MESSAGE: "Default message".to_string(),
-                MAX_MESSAGE_LEN: 500,
-                TIME_INTERVAL: 5,
-                MAX_TIME_INTERVAL: 86400,
-                DEFAULT_MESSAGE_LEN: 100,
-            }
-        });
+        let ACTION_CONFIG =
+            crate::service::config_reader::load_action_config().unwrap_or_else(|_| {
+                crate::action::config::ActionConfig {
+                    MESSAGE: "Default message".to_string(),
+                    MAX_MESSAGE_LEN: 500,
+                    TIME_INTERVAL: 5,
+                    MAX_TIME_INTERVAL: 86400,
+                    DEFAULT_MESSAGE_LEN: 100,
+                }
+            });
         ACTION_CONFIG.TIME_INTERVAL
     }
 

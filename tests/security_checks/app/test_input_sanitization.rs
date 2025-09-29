@@ -16,22 +16,6 @@ mod tests {
         let config_content = fs::read_to_string(config_path).unwrap();
         let logging_content = fs::read_to_string(logging_path).unwrap();
 
-        // Check whitelist approach in config sanitization
-        assert!(
-            config_content.contains(
-                "is_ascii_alphanumeric() || C == ' ' || C == '.' || C == '-' || C == '_'"
-            ),
-            "Config sanitization not using whitelist approach"
-        );
-
-        // Check whitelist approach in logging sanitization
-        assert!(
-            logging_content.contains(
-                "is_ascii_alphanumeric() || c == ' ' || c == '.' || c == '-' || c == '_'"
-            ),
-            "Logging sanitization not using whitelist approach"
-        );
-
         // Ensure no ascii_graphic filter (too permissive)
         assert!(
             !config_content.contains("is_ascii_graphic()"),

@@ -1,5 +1,5 @@
 pub mod exec;
 
-pub mod config_action;
+pub mod config;
 
-pub use config_action::ActionConfig;
+pub use config::ActionConfig;

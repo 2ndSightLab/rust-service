@@ -29,7 +29,7 @@ case $choice in
 esac
 
 # Find config file
-CONFIG_FILE=$(find_config_file "config-service.toml")
+CONFIG_FILE=$(find_config_file "service.toml")
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
@@ -74,13 +74,13 @@ if [[ ! -x "$INSTALL_DIR/$SERVICE_NAME" ]]; then
 fi
 
 # Verify config file exists and has correct permissions
-if [[ ! -f "$CONFIG_DIR/config-service.toml" ]]; then
-    echo "Error: Config file not found at $CONFIG_DIR/config-service.toml"
+if [[ ! -f "$CONFIG_DIR/service.toml" ]]; then
+    echo "Error: Config file not found at $CONFIG_DIR/service.toml"
     exit 1
 fi
 
 # Check config file permissions (should not be world-writable)
-if [[ $(stat -c "%a" "$CONFIG_DIR/config-service.toml") -gt 644 ]]; then
+if [[ $(stat -c "%a" "$CONFIG_DIR/service.toml") -gt 644 ]]; then
     echo "Error: Config file has insecure permissions"
     exit 1
 fi

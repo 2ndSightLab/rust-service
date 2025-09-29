@@ -34,7 +34,7 @@ SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 source "$SCRIPT_DIR/functions/find_config.sh"
 
 # Find config file
-CONFIG_FILE=$(find_config_file "config-service.toml")
+CONFIG_FILE=$(find_config_file "service.toml")
 if [[ $? -ne 0 ]]; then
     exit 1
 fi

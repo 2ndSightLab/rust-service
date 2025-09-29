@@ -1,3 +1,4 @@
+use crate::security::validation::sanitize_message;
 use crate::service::config::Config;
 use crate::service::error::ServiceError;
 use std::fs;
@@ -44,8 +45,16 @@ impl log::Log for FileLogger {
     fn log(&self, record: &log::Record) {
         let NOW = match SystemTime::now().duration_since(UNIX_EPOCH) {
             Ok(DURATION) => {
-                // SECURITY: Overflow protection - try_from with safe fallback prevents panics
-                u64::try_from(DURATION.as_millis()).unwrap_or(0)
+                // SECURITY: Overflow protection - use saturating conversion instead of silent fallback to 0
+                let MILLIS = DURATION.as_millis();
+                if MILLIS > u128::from(u64::MAX) {
+                    u64::MAX
+                } else {
+                    #[allow(clippy::cast_possible_truncation)]
+                    {
+                        MILLIS as u64
+                    }
+                }
             }
             Err(_) => return,
         };
@@ -61,17 +70,14 @@ impl log::Log for FileLogger {
         LAST_LOG_TIME.store(NOW, Ordering::Relaxed);
 
         // Get configurable message length limit from action config
-        let ACTION_CONFIG = crate::service::config::load_action_config().unwrap_or_default();
+        let ACTION_CONFIG = crate::service::config_reader::load_action_config().unwrap_or_default();
         let MAX_MSG_LEN = ACTION_CONFIG.MAX_MESSAGE_LEN;
 
         // Sanitize message with configurable length using whitelist approach
-        let ESCAPED_MSG = record
-            .args()
-            .to_string()
-            .chars()
-            .filter(|&c| c.is_ascii_alphanumeric() || c == ' ' || c == '.' || c == '-' || c == '_')
-            .take(MAX_MSG_LEN)
-            .collect::<String>();
+        let ESCAPED_MSG = match sanitize_message(&record.args().to_string(), MAX_MSG_LEN) {
+            Ok(msg) => msg,
+            Err(_) => "Invalid message".to_string(),
+        };
 
         let MESSAGE = format!("[{}] [{}] {ESCAPED_MSG}", NOW / 1000, record.level());
         println!("{MESSAGE}");
@@ -81,62 +87,35 @@ impl log::Log for FileLogger {
     fn flush(&self) {}
 }
 
+const ALLOWED_PREFIXES: &[&str] = &["/var/log", "/opt"];
+
 fn write_to_log_file(LOG_FILE_PATH: &str, MESSAGE: &str) -> Result<(), ServiceError> {
-    let LOG_DIR = Path::new(LOG_FILE_PATH);
+    // Get service name from config to construct full log path
+    let SERVICE_NAME = get_config_value(|C| C.SERVICE_NAME.clone(), "service".to_string());
+    let LOG_DIR = Path::new(LOG_FILE_PATH).join(&SERVICE_NAME);
 
-    // Try to open the directory first to check existence via file descriptor
-    let DIR_RESULT = fs::File::open(LOG_DIR);
+    // SECURITY: Check for symlinks before canonicalization
+    if LOG_DIR.is_symlink() {
+        return Err(ServiceError::Config(
+            "Path contains symlinks - potential security risk".to_string(),
+        ));
+    }
 
-    let LOG_FILE = if let Ok(dir_fd) = DIR_RESULT {
-        // Directory exists, get canonical path via file descriptor
-        #[cfg(unix)]
-        {
-            use std::os::unix::io::AsRawFd;
-            let FD = dir_fd.as_raw_fd();
+    // SECURITY: Always canonicalize path to prevent directory traversal
+    let CANONICAL_DIR = LOG_DIR.canonicalize()
+        .map_err(|_| ServiceError::Config("Cannot canonicalize log directory".to_string()))?;
 
-            // Use readlink on /proc/self/fd/{fd} to get canonical path
-            let PROC_PATH = format!("/proc/self/fd/{FD}");
-            let CANONICAL_PATH = fs::read_link(&PROC_PATH)
-                .map_err(|_| ServiceError::Config("Cannot resolve directory path".to_string()))?;
+    // Validate against allowed prefixes
+    if !ALLOWED_PREFIXES
+        .iter()
+        .any(|prefix| CANONICAL_DIR.starts_with(prefix))
+    {
+        return Err(ServiceError::Config(
+            "Log directory not in allowed location".to_string(),
+        ));
+    }
 
-            let ALLOWED_PREFIXES = ["/var/log", "/opt"];
-            if !ALLOWED_PREFIXES
-                .iter()
-                .any(|prefix| CANONICAL_PATH.starts_with(prefix))
-            {
-                return Err(ServiceError::Config(
-                    "Log directory not in allowed location".to_string(),
-                ));
-            }
-
-            CANONICAL_PATH.join("service.log")
-        }
-        #[cfg(not(unix))]
-        {
-            return Err(ServiceError::Config("Platform not supported".to_string()));
-        }
-    } else {
-        // Directory doesn't exist, create it and then validate
-        fs::create_dir_all(LOG_DIR)
-            .map_err(|_| ServiceError::Config("Cannot create log directory".to_string()))?;
-
-        // Use canonicalize for path validation after creation
-        let CANONICAL_DIR = LOG_DIR
-            .canonicalize()
-            .map_err(|_| ServiceError::Config("Invalid log directory path".to_string()))?;
-
-        let ALLOWED_PREFIXES = ["/var/log", "/opt"];
-        if !ALLOWED_PREFIXES
-            .iter()
-            .any(|prefix| CANONICAL_DIR.starts_with(prefix))
-        {
-            return Err(ServiceError::Config(
-                "Log directory not in allowed location".to_string(),
-            ));
-        }
-
-        CANONICAL_DIR.join("service.log")
-    };
+    let LOG_FILE = CANONICAL_DIR.join("service.log");
 
     #[cfg(unix)]
     let FILE = {
@@ -177,7 +156,7 @@ fn write_to_log_file(LOG_FILE_PATH: &str, MESSAGE: &str) -> Result<(), ServiceEr
         // SAFETY: flock() is safe when called on a valid file descriptor with valid flags
         let RESULT = unsafe { libc::flock(FD, libc::LOCK_EX) };
         if RESULT != 0 {
-            // Get errno for better error reporting
+            // SAFETY: __errno_location() returns a valid pointer to thread-local errno
             let ERRNO = unsafe { *libc::__errno_location() };
             return Err(ServiceError::Config(format!(
                 "Cannot acquire file lock: errno {ERRNO}"

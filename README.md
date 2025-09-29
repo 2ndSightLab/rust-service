@@ -32,14 +32,13 @@ https://github.com/2ndSightLab/test-rust-service
 __Configuration Variables__
 
 * LOG_FILE_PATH: The directory path where log files are written
+* INSTALL_DIR: Installation directory for the service binary
+* CONFIG_DIR: Configuration directory for the service
 * SERVICE_NAME: The name of the service (used for display and validation)
-* TIME_INTERVAL: The interval in seconds between message outputs
-* MESSAGE: The message that gets written to screen and logs
 * MEMORY_THRESHOLD: Memory usage threshold percentage (default: 80)
 * DISK_THRESHOLD: Disk usage threshold percentage (default: 80)
 * MIN_FD_LIMIT: Minimum file descriptor limit required
 * MAX_SERVICE_NAME_LEN: Maximum allowed service name length
-* MAX_MESSAGE_LEN: Maximum allowed message length
 * MAX_LOG_PATH_LEN: Maximum allowed log path length
 * MIN_LOG_INTERVAL_MS: Minimum logging interval in milliseconds
 * MAX_LOG_FILE_SIZE: Maximum log file size in bytes
@@ -48,16 +47,29 @@ __Configuration Variables__
 * MAX_FD_LIMIT: Maximum file descriptor limit
 * MAX_CONFIG_FIELD_LEN: Maximum configuration field length
 
+__Action Configuration Variables__
+
+* MESSAGE: The message that gets written to screen and logs
+* MAX_MESSAGE_LEN: Maximum allowed message length
+* TIME_INTERVAL: The interval in seconds between message outputs
+* DEFAULT_MESSAGE_LEN: Default message length for fallback
+
 __Architecture__
 
 The code is organized into modular components:
 
 * `src/main.rs` - Application entry point and orchestration
-* `src/service/service.rs` - Library interface and module exports
-* `src/config/config.rs` - Configuration parsing and validation
-* `src/service/error.rs` - Custom error types using thiserror
-* `src/service/logging.rs` - File logging with security checks
-* `src/service/monitoring.rs` - System resource monitoring
+* `src/lib.rs` - Library interface and module exports
+* `src/service/` - Core service modules:
+  * `config.rs` - Service configuration structure and validation
+  * `config_reader.rs` - Configuration loading from system directories
+  * `error.rs` - Custom error types using thiserror
+  * `logging.rs` - File logging with security checks
+  * `monitoring.rs` - System resource monitoring
+  * `run.rs` - Service runner implementation
+* `src/action/` - Action modules:
+  * `config.rs` - Action configuration structure and validation
+  * `exec.rs` - Action execution implementation
 * `src/security/` - Security validation modules:
   * `uid.rs` - User ID operations
   * `limits.rs` - System limits checking
@@ -71,13 +83,16 @@ __Dependencies__
 * `ctrlc` - Graceful shutdown handling
 * `libc` - System calls for security checks
 * `thiserror` - Error handling
-* `users` - User information queries
 * `nix` - Unix system calls
 * `regex` - Pattern matching (dev dependency)
+* `tempfile` - Temporary files for testing (dev dependency)
+* `walkdir` - Directory traversal (dev dependency)
+* `chrono` - Date/time handling (dev dependency)
+* `rust-common-tests` - Common test utilities (dev dependency)
 
 __Functionality__
 
-* Loads configuration from protected system directories
+* Loads configuration from executable directory
 * Validates all configuration values for type, length, and security
 * Performs security checks (prevents running as root, validates user)
 * Monitors system resources (memory and disk usage)
@@ -115,9 +130,7 @@ __Building and Testing__
 
 __Configuration File Locations__
 
-The service looks for configuration files in these locations (in order):
-1. `/etc/rust-service/config-service.toml` (service configuration)
-2. `/etc/rust-service/config-action.toml` (action configuration)
-3. `/opt/rust-service/config-service.toml` (service configuration)
-4. `/opt/rust-service/config-action.toml` (action configuration)
+The service looks for configuration files in the executable directory:
+1. `service.toml` (service configuration)
+2. `action.toml` (action configuration)
 

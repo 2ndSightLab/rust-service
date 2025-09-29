@@ -3,6 +3,11 @@ name = "rust-service"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+has_config_tests = []
+has_monitoring_tests = []
+has_monitoring_unit_tests = []
+
 [lib]
 name = "rust_service"
 path = "src/lib.rs"
@@ -26,3 +31,18 @@ nix = { version = "0.30.1", features = ["fs"] }
 [dev-dependencies]
 regex = "1.0"
 tempfile = "3.0"
+walkdir = "2.0"
+chrono = "0.4"
+rust-common-tests = { path = "../rust-common-tests" }
+
+[[test]]
+name = "integration"
+path = "tests/integration.rs"
+
+[[test]]
+name = "security_checks"
+path = "tests/security_checks.rs"
+
+[[test]]
+name = "unit_tests"
+path = "tests/unit_tests.rs"

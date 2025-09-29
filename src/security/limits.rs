@@ -13,7 +13,7 @@ pub fn get_file_descriptor_limit() -> Result<u64, ServiceError> {
         let RESULT = unsafe { libc::getrlimit(libc::RLIMIT_NOFILE, &raw mut RLIMIT) };
 
         if RESULT != 0 {
-            // Get errno for better error reporting
+            // SAFETY: __errno_location() returns a valid pointer to thread-local errno
             let ERRNO = unsafe { *libc::__errno_location() };
             return Err(ServiceError::Config(format!(
                 "Failed to get file descriptor limit: errno {ERRNO}"

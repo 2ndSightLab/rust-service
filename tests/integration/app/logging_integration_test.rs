@@ -23,7 +23,10 @@ fn test_log_file_creation() {
     let _ = child.wait();
 
     // Check for log files in common log directories
-    let log_dirs = ["/var/log/rust-service-debug", "/var/log/rust-service"];
+    let log_dirs = [
+        "/var/log/test-rust-service-debug",
+        "/var/log/test-rust-service",
+    ];
 
     for log_dir in &log_dirs {
         if let Ok(entries) = fs::read_dir(log_dir) {
