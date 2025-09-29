@@ -7,6 +7,7 @@ A Rust service library that can be used to run any service. Includes logging, co
 This service has been rewritten to be a crate only. You can see how to use it in these two projects. I tested two services to make sure there are no hard-coded dependencies:
 
 https://github.com/2ndSightLab/test-rust-service
+
 https://github.com/2ndSightLab/test-rust-service-2
 
 All my rust projects are going to use this common repo for global unit tests:
