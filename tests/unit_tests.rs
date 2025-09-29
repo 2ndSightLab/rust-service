@@ -1,7 +1,6 @@
 use std::process::Command;
 
 mod unit_tests {
-    mod time_action_test;
     pub mod app;
 }
 

@@ -1,7 +1,7 @@
 use std::process::Command;
 
 mod integration {
-    mod time_output_test;
+    pub mod app;
 }
 
 #[test]
