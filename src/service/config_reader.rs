@@ -2,32 +2,35 @@ pub use crate::action::config::{
     ActionConfig, get_config_file_name as get_action_config_file_name,
     validate_all_action_config_fields,
 };
+use crate::security::validation::read_config_file;
 pub use crate::service::config::{
     Config, get_config_file_name as get_service_config_file_name, validate_all_config_fields,
 };
-use crate::security::validation::read_config_file;
-use crate::service::error::ServiceError;
+use crate::service::service_error::ServiceError;
 use std::path::Path;
 
 /// Generic function to load config from executable directory by filename
 fn load_config_by_filename(filename: &str) -> Result<String, ServiceError> {
     let exe_path = std::env::current_exe()
         .map_err(|e| ServiceError::Config(format!("Cannot determine executable path: {e}")))?;
-    
-    let exe_dir = exe_path.parent()
+
+    let exe_dir = exe_path
+        .parent()
         .ok_or_else(|| ServiceError::Config("Cannot determine executable directory".to_string()))?;
-    
+
     let config_path = exe_dir.join(filename);
-    
+
     // Only canonicalize if file exists to prevent directory traversal
     let final_path = if config_path.exists() {
-        config_path.canonicalize()
+        config_path
+            .canonicalize()
             .map_err(|e| ServiceError::Config(format!("Cannot canonicalize config path: {e}")))?
     } else {
         config_path
     };
-    
-    read_config_file(&[final_path.to_str()
+
+    read_config_file(&[final_path
+        .to_str()
         .ok_or_else(|| ServiceError::Config("Invalid config path".to_string()))?])
 }
 

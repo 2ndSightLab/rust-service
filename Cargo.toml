@@ -3,6 +3,9 @@ name = "rust-service"
 version = "0.1.0"
 edition = "2024"
 
+[package.metadata]
+install_dir = "#no installation directory required for libraries"
+
 [features]
 has_config_tests = []
 has_monitoring_tests = []
@@ -11,10 +14,6 @@ has_monitoring_unit_tests = []
 [lib]
 name = "rust_service"
 path = "src/lib.rs"
-
-[[bin]]
-name = "rust-service"
-path = "src/main.rs"
 
 [lints.rust]
 non_snake_case = "allow"
@@ -40,9 +39,21 @@ name = "integration"
 path = "tests/integration.rs"
 
 [[test]]
+name = "integration_common"
+path = "../rust-common-tests/tests/integration_common.rs"
+
+[[test]]
 name = "security_checks"
 path = "tests/security_checks.rs"
 
 [[test]]
-name = "unit_tests"
-path = "tests/unit_tests.rs"
+name = "security_checks_common"
+path = "../rust-common-tests/tests/security_checks_common.rs"
+
+[[test]]
+name = "unit"
+path = "tests/unit.rs"
+
+[[test]]
+name = "unit_tests_common"
+path = "../rust-common-tests/tests/unit_tests_common.rs"

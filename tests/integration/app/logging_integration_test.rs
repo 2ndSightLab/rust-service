@@ -1,5 +1,4 @@
-use crate::integration::common::test_prerequisites;
-
+use super::test_prerequisites;
 use std::fs;
 use std::process::Command;
 

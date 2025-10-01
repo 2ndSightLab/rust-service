@@ -1,7 +1,7 @@
 use super::limits::get_file_descriptor_limit;
 use super::uid::get_current_uid;
 use crate::service::config::Config;
-use crate::service::error::ServiceError;
+use crate::service::service_error::ServiceError;
 use std::fs;
 use std::path::{Path, PathBuf};
 

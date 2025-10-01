@@ -1,5 +1,5 @@
-use crate::security::validation::{validate_config_field, sanitize_message};
-use crate::service::error::ServiceError;
+use crate::security::validation::{sanitize_message, validate_config_field};
+use crate::service::service_error::ServiceError;
 use serde::Deserialize;
 use std::fs;
 
@@ -34,7 +34,7 @@ pub struct Config {
 /// Returns `ServiceError` if any configuration field is invalid.
 pub fn validate_all_config_fields(config: &Config) -> Result<(), ServiceError> {
     let _sanitized_name = sanitize_message(&config.SERVICE_NAME, config.MAX_SERVICE_NAME_LEN)?;
-    
+
     validate_config_field(
         &config.SERVICE_NAME.len(),
         &1,
@@ -97,32 +97,38 @@ pub fn load_secure_config() -> Result<Config, ServiceError> {
     // Validate paths against secure directories: "/var/log", "/opt"
     let exe_path = std::env::current_exe()
         .map_err(|e| ServiceError::Config(format!("Cannot determine executable path: {e}")))?;
-    
-    let exe_dir = exe_path.parent()
+
+    let exe_dir = exe_path
+        .parent()
         .ok_or_else(|| ServiceError::Config("Cannot determine executable directory".to_string()))?;
-    
+
     let config_path = exe_dir.join("service.toml");
-    
+
     if !config_path.exists() {
-        return Err(ServiceError::Config("No valid config file found".to_string()));
+        return Err(ServiceError::Config(
+            "No valid config file found".to_string(),
+        ));
     }
 
     // Open file first to get file descriptor
     let FILE = fs::File::open(&config_path).map_err(|e| {
-        ServiceError::Config(format!("Failed to open config file {}: {e}", config_path.display()))
+        ServiceError::Config(format!(
+            "Failed to open config file {}: {e}",
+            config_path.display()
+        ))
     })?;
 
     // Use file descriptor for metadata check to prevent race conditions
-    let _metadata = FILE.metadata().map_err(|e| {
-        ServiceError::Config(format!("Cannot read config file metadata: {e}"))
-    })?;
+    let _metadata = FILE
+        .metadata()
+        .map_err(|e| ServiceError::Config(format!("Cannot read config file metadata: {e}")))?;
 
     let content = fs::read_to_string(&config_path)
         .map_err(|e| ServiceError::Config(format!("Failed to read config file: {e}")))?;
-    
-    let config: Config = toml::from_str(&content)
-        .map_err(|e| ServiceError::Config(format!("Invalid TOML: {e}")))?;
-    
+
+    let config: Config =
+        toml::from_str(&content).map_err(|e| ServiceError::Config(format!("Invalid TOML: {e}")))?;
+
     validate_all_config_fields(&config)?;
     Ok(config)
 }

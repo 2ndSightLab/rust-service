@@ -1,4 +1,4 @@
-use crate::integration::common::test_prerequisites;
+use super::test_prerequisites;
 use std::process::Command;
 
 #[test]

@@ -1,2 +1,6 @@
-#[path = "security_checks/app/mod.rs"]
-mod security_checks_app;
+mod common;
+
+#[test]
+fn run_all_common_security_tests() {
+    common::run_common_tests("security_checks_common");
+}

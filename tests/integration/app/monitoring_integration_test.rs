@@ -1,16 +1,16 @@
-use crate::integration::common::test_prerequisites;
 
 use std::process::Command;
 use std::time::{Duration, Instant};
+use crate::integration::app::test_prerequisites;
 
 #[test]
 fn test_system_resource_monitoring() {
+    let paths = test_prerequisites::get_test_paths().unwrap();
     println!(
         "RUNNING: test_system_resource_monitoring - Testing system resource monitoring exists"
     );
     println!("Testing that monitoring functions are available...");
 
-    let paths = test_prerequisites::get_test_paths().unwrap();
 
     // Just test that the service starts and runs briefly without crashing
     let start = Instant::now();
@@ -34,12 +34,12 @@ fn test_system_resource_monitoring() {
 
 #[test]
 fn test_file_descriptor_limits() {
+    let paths = test_prerequisites::get_test_paths().unwrap();
     println!(
         "RUNNING: test_file_descriptor_limits - Testing file descriptor limit validation exists"
     );
     println!("Testing that fd limit checking is available...");
 
-    let paths = test_prerequisites::get_test_paths().unwrap();
 
     // Just test that the service can start (fd limits are checked at startup)
     let mut child = Command::new(&paths.binary_path)

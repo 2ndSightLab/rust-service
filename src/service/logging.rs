@@ -1,6 +1,6 @@
 use crate::security::validation::sanitize_message;
 use crate::service::config::Config;
-use crate::service::error::ServiceError;
+use crate::service::service_error::ServiceError;
 use std::fs;
 use std::io::{Seek, SeekFrom, Write};
 use std::path::Path;
@@ -102,7 +102,8 @@ fn write_to_log_file(LOG_FILE_PATH: &str, MESSAGE: &str) -> Result<(), ServiceEr
     }
 
     // SECURITY: Always canonicalize path to prevent directory traversal
-    let CANONICAL_DIR = LOG_DIR.canonicalize()
+    let CANONICAL_DIR = LOG_DIR
+        .canonicalize()
         .map_err(|_| ServiceError::Config("Cannot canonicalize log directory".to_string()))?;
 
     // Validate against allowed prefixes

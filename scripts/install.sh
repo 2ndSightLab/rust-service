@@ -2,15 +2,22 @@
 
 set -e
 
-SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
-
-# Source config reading functions
-source "$SCRIPT_DIR/functions/read_config.sh"
-source "$SCRIPT_DIR/functions/find_config.sh"
+# Set standard directory variables and source all functions
+SCRIPTS_DIR="$(dirname "$(readlink -f "$0")")"
+for func in "$SCRIPTS_DIR/functions"/*.sh; do source "$func"; done
+PROJECT_DIR=$(get_project_dir)
 
 # Validate running as appropriate user (not root for safety)
 if [[ $EUID -eq 0 ]]; then
     echo "Warning: Running as root. This script will use sudo for privileged operations."
+fi
+
+# Check if this is a library project first
+PROJECT_TYPE=$(get_project_type)
+if [[ "$PROJECT_TYPE" == "lib" ]]; then
+    echo "No installation required for library projects."
+    echo "Libraries are used as dependencies and don't need to be installed."
+    exit 0
 fi
 
 # Check for command line arguments or non-interactive mode
@@ -40,42 +47,51 @@ case $choice in
         ;;
 esac
 
-# Find config file
-CONFIG_FILE=$(find_config_file "service.toml")
-if [[ $? -ne 0 ]]; then
-    exit 1
-fi
-
-# Read service name from config
-SERVICE_NAME=$(grep "^SERVICE_NAME" "$CONFIG_FILE" | sed 's/SERVICE_NAME = "\(.*\)"/\1/' | tr -d '"')
+# Get project name
+PROJECT_NAME=$(get_project_name)
 
 # Get current architecture
 CURRENT_ARCH=$(rustc --version --verbose | grep host | cut -d' ' -f2)
 
-BINARY_PATH="target/$CURRENT_ARCH/$BINARY_TYPE/$SERVICE_NAME"
+# Get project type and check if installation is needed
+PROJECT_TYPE=$(get_project_type)
 
-# Read directories from config file
-INSTALL_DIR=$(read_config_value "INSTALL_DIR" "$CONFIG_FILE" "$DEBUG_SUFFIX")
-LOG_DIR=$(read_config_value "LOG_FILE_PATH" "$CONFIG_FILE" "$DEBUG_SUFFIX")
+# Get binary path for service projects
+BINARY_PATH=$(get_build_artifact "$PROJECT_TYPE" "$choice" "$PROJECT_DIR" "$CURRENT_ARCH" "$PROJECT_NAME")
+
+# Read directories from local config file
+LOCAL_CONFIG=$(get_local_config_file)
+INSTALL_DIR=$(get_install_directory "$BINARY_TYPE")
+LOG_DIR=$(read_config_value "LOG_FILE_PATH" "$LOCAL_CONFIG")
 CONFIG_DIR="$INSTALL_DIR"
-SERVICE_NAME=$(read_config_value "SERVICE_NAME" "$CONFIG_FILE")
 
 # Set service user based on debug mode
 if [[ "$choice" == "1" ]]; then
-    SERVICE_USER="$SERVICE_NAME-debug"
+    SERVICE_USER="$PROJECT_NAME-debug"
 else
-    SERVICE_USER="$SERVICE_NAME"
+    SERVICE_USER="$PROJECT_NAME"
 fi
 
-echo "Installing $SERVICE_NAME ($BINARY_TYPE)..."
+echo "Installing $PROJECT_NAME ($BINARY_TYPE)..."
 echo "Install dir: $INSTALL_DIR"
 echo "Config dir: $CONFIG_DIR"
 echo "Log dir: $LOG_DIR"
 
 # Validate binary exists before installation
 if [[ ! -f "$BINARY_PATH" ]]; then
-    echo "Error: Binary not found at $BINARY_PATH. Run './scripts/build.sh' first."
-    exit 1
+    echo "Binary not found at $BINARY_PATH"
+    read -p "Would you like to build the project now? (y/n): " build_choice
+    if [[ "$build_choice" =~ ^[Yy]$ ]]; then
+        echo "Building project..."
+        "$SCRIPTS_DIR/build.sh" "--$BINARY_TYPE"
+        if [[ ! -f "$BINARY_PATH" ]]; then
+            echo "Error: Build failed or binary still not found."
+            exit 1
+        fi
+    else
+        echo "Installation cancelled. Run './scripts/build.sh' first."
+        exit 1
+    fi
 fi
 
 # Create service user with restricted shell
@@ -92,13 +108,11 @@ sudo mkdir -p "$LOG_DIR"
 # Copy binary
 echo "Installing binary..."
 sudo cp "$BINARY_PATH" "$INSTALL_DIR/"
-sudo chmod +x "$INSTALL_DIR/$SERVICE_NAME"
+sudo chmod +x "$INSTALL_DIR/$PROJECT_NAME"
 
-# Copy config (only if source and destination are different)
 echo "Installing configuration..."
-SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
-PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
-LOCAL_CONFIG="$PROJECT_ROOT/config/service.toml"
+# Get the local config file path based on project type
+LOCAL_CONFIG=$(get_local_config_file)
 
 if [[ -f "$LOCAL_CONFIG" ]]; then
     sudo cp "$LOCAL_CONFIG" "$CONFIG_DIR/"
@@ -108,9 +122,7 @@ else
 fi
 
 # Also install action config from local directory
-SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
-PROJECT_ROOT=$(dirname "$SCRIPT_DIR")
-LOCAL_ACTION_CONFIG="$PROJECT_ROOT/config/action.toml"
+LOCAL_ACTION_CONFIG="$PROJECT_DIR/config/action.toml"
 if [[ -f "$LOCAL_ACTION_CONFIG" ]]; then
     sudo cp "$LOCAL_ACTION_CONFIG" "$CONFIG_DIR/"
 fi
@@ -137,8 +149,6 @@ if [[ -f "$CONFIG_DIR/action.toml" ]]; then
 fi
 
 echo "Installation complete!"
-echo "Binary: $INSTALL_DIR/$SERVICE_NAME"
+echo "Binary: $INSTALL_DIR/$PROJECT_NAME"
 echo "Config: $CONFIG_DIR/service.toml"
 echo "Logs: $LOG_DIR/"
-echo ""
-echo "To run: sudo -u $SERVICE_USER $INSTALL_DIR/$SERVICE_NAME"

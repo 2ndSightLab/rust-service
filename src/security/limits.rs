@@ -1,4 +1,4 @@
-use crate::service::error::ServiceError;
+use crate::service::service_error::ServiceError;
 
 pub fn get_file_descriptor_limit() -> Result<u64, ServiceError> {
     #[cfg(unix)]

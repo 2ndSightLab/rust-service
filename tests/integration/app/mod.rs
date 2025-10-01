@@ -2,3 +2,4 @@
 pub mod config_discovery_test;
 pub mod logging_integration_test;
 pub mod service_lifecycle_test;
+pub mod test_prerequisites;

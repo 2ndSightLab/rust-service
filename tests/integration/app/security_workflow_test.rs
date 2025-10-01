@@ -1,14 +1,14 @@
-use crate::integration::common::test_prerequisites;
 
 use std::process::Command;
 use std::time::Duration;
+use crate::integration::app::test_prerequisites;
 
 #[test]
 fn test_root_user_prevention() {
+    let paths = test_prerequisites::get_test_paths().unwrap();
     println!("RUNNING: test_root_user_prevention - Testing root user prevention security");
     println!("Testing root user prevention...");
 
-    let paths = test_prerequisites::get_test_paths().unwrap();
 
     if unsafe { libc::getuid() } == 0 {
         println!("Running as root - testing prevention...");
@@ -29,10 +29,10 @@ fn test_root_user_prevention() {
 
 #[test]
 fn test_input_validation() {
+    let paths = test_prerequisites::get_test_paths().unwrap();
     println!("RUNNING: test_input_validation - Testing input validation and security checks");
     println!("Testing input validation with oversized service name...");
 
-    let paths = test_prerequisites::get_test_paths().unwrap();
 
     // Test that service starts normally (input validation happens at config load)
     let mut child = Command::new(&paths.binary_path)

@@ -3,4 +3,4 @@ pub mod security;
 pub mod service;
 
 pub use action::exec;
-pub use service::{Config, load_config, load_action_config};
+pub use service::{Config, load_action_config, load_config};

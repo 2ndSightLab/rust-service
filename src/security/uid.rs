@@ -1,4 +1,4 @@
-use crate::service::error::ServiceError;
+use crate::service::service_error::ServiceError;
 
 /// Gets the current user ID.
 ///

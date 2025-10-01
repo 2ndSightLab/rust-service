@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Set standard directory variables and source all functions
+SCRIPTS_DIR="$(dirname "$(readlink -f "$0")")"
+for func in "$SCRIPTS_DIR/functions"/*.sh; do source "$func"; done
+PROJECT_DIR=$(get_project_dir)
+
 echo "Running Rust Best Practices Check"
 echo "================================="
 
@@ -28,49 +33,42 @@ esac
 echo "Using $BUILD_TYPE build..."
 
 # Read directory paths from config file
-SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
-
-# Source config reading functions
-source "$SCRIPT_DIR/functions/find_config.sh"
-
 # Find config file
-CONFIG_FILE=$(find_config_file "service.toml")
-if [[ $? -ne 0 ]]; then
-    exit 1
-fi
+PROJECT_NAME=$(get_project_name)
+CONFIG_FILE=$(get_config_file "$PROJECT_NAME" "$BUILD_TYPE")
 
 # Check if we're using lib.toml and adjust accordingly
 if [[ "$CONFIG_FILE" == *"lib.toml" ]]; then
-    # Using lib config, set default paths
-    INSTALL_DIR="/opt/rust-service"
+    # Using lib config, get install directory from function
+    INSTALL_DIR=$(get_install_directory "$BUILD_TYPE")
     CONFIG_DIR="/etc/rust-service"
     LOG_FILE_PATH="/var/log/rust-service"
     # Get binary name from lib config or Cargo.toml
-    LIB_NAME=$(grep "^LIB_NAME" "$CONFIG_FILE" | sed 's/LIB_NAME = "\(.*\)"/\1/' | tr -d '"')
+    LIB_NAME=$(read_config_value "LIB_NAME" "$CONFIG_FILE")
     BINARY_NAME="$LIB_NAME"
 else
-    # Using service config, read from file
-    INSTALL_DIR=$(grep "^INSTALL_DIR" "$CONFIG_FILE" | sed 's/INSTALL_DIR = "\(.*\)"/\1/' | tr -d '"')
-    CONFIG_DIR=$(grep "^CONFIG_DIR" "$CONFIG_FILE" | sed 's/CONFIG_DIR = "\(.*\)"/\1/' | tr -d '"')
-    LOG_FILE_PATH=$(grep "^LOG_FILE_PATH" "$CONFIG_FILE" | sed 's/LOG_FILE_PATH = "\(.*\)"/\1/' | tr -d '"')
-fi
-
-# Add -debug suffix for debug builds
-if [ "$BUILD_TYPE" = "debug" ]; then
-    INSTALL_DIR="${INSTALL_DIR}-debug"
-    CONFIG_DIR="${CONFIG_DIR}-debug"
-    LOG_FILE_PATH="${LOG_FILE_PATH}-debug"
+    # Using service config, get install directory from function
+    INSTALL_DIR=$(get_install_directory "$BUILD_TYPE")
+    CONFIG_DIR=$(read_config_value "CONFIG_DIR" "$CONFIG_FILE")
+    LOG_FILE_PATH=$(read_config_value "LOG_FILE_PATH" "$CONFIG_FILE")
 fi
 
 # Exit on any error
 set -e
 
-# Get binary name from Cargo.toml or lib config
+# Get binary name from config file (same as install.sh)
 if [[ -z "$BINARY_NAME" ]]; then
-    BINARY_NAME=$(grep -A 10 "^\[\[bin\]\]" Cargo.toml | grep "^name" | head -1 | sed 's/name = "\(.*\)"/\1/' | tr -d '"')
-    if [ -z "$BINARY_NAME" ]; then
-        # Fallback to package name if no explicit binary name
-        BINARY_NAME=$(grep "^name" Cargo.toml | head -1 | sed 's/name = "\(.*\)"/\1/' | tr -d '"')
+# Get project name
+PROJECT_NAME=$(get_project_name)
+    # Set binary name based on project type
+    if [[ -f "$PROJECT_DIR/config/service.toml" ]] || [[ "$CONFIG_FILE" == *"service.toml" ]]; then
+        BINARY_NAME="$PROJECT_NAME"
+    # Finally fall back to lib config
+    else
+        if [[ -f "$PROJECT_DIR/config/lib.toml" ]]; then
+            LIB_NAME=$(read_config_value "LIB_NAME" "$PROJECT_DIR/config/lib.toml")
+        fi
+        BINARY_NAME="$LIB_NAME"
     fi
 fi
 
@@ -90,8 +88,21 @@ echo "5. Dependency tree analysis..."
 cargo tree --duplicates
 
 echo "6. Binary size analysis..."
-RUSTFLAGS="-D warnings -A non_snake_case -A clippy::upper_case_acronyms" cargo build --release
-ls -lh target/release/$BINARY_NAME
+# Check if we're being called from a service project (look for service config in calling directory)
+CALLING_DIR=$(pwd)
+if [[ -f "$CALLING_DIR/config/service.toml" ]]; then
+    # We're being called from a service project, build and check its binary
+    RUSTFLAGS="-D warnings -A non_snake_case -A clippy::upper_case_acronyms" cargo build $BUILD_FLAG
+    SERVICE_BINARY="$PROJECT_NAME"
+    ls -lh target/$BUILD_TYPE/$SERVICE_BINARY
+elif [[ -f "$PROJECT_DIR/config/lib.toml" ]] && [[ ! -f "$PROJECT_DIR/config/service.toml" ]] && [[ ! -f "$PROJECT_DIR/src/main.rs" ]]; then
+    # We're in a library project that doesn't produce binaries
+    echo "Skipping binary size analysis for library project"
+else
+    # Default behavior for other cases
+    RUSTFLAGS="-D warnings -A non_snake_case -A clippy::upper_case_acronyms" cargo build $BUILD_FLAG
+    ls -lh target/$BUILD_TYPE/$BINARY_NAME
+fi
 
 echo "7. Architecture-specific check..."
 CURRENT_ARCH=$(rustc --version --verbose | grep host | cut -d' ' -f2)
@@ -108,6 +119,8 @@ echo "10. Test coverage analysis..."
 cargo tarpaulin --out Stdout || echo "Warning: cargo tarpaulin not installed"
 
 echo "11. Memory safety checks..."
-cargo +nightly miri test || echo "Warning: cargo miri not available"
+echo -e "${RED}⚠️  WARNING: miri checks SKIPPED to avoid downloading components${NC}"
+echo -e "${RED}   Memory safety checks will be SKIPPED${NC}"
+echo -e "${RED}   Run manually with: cargo +nightly miri test${NC}"
 
 echo "All essential best practices checks completed successfully!"

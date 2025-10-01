@@ -1,5 +1,5 @@
 use crate::security::validation::validate_config_field;
-use crate::service::error::ServiceError;
+use crate::service::service_error::ServiceError;
 use serde::Deserialize;
 
 #[must_use]

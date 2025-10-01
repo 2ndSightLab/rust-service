@@ -1,16 +1,16 @@
-use crate::integration::common::test_prerequisites;
 
 use std::fs;
 use std::process::{Command, Stdio};
 use std::thread;
 use std::time::Duration;
+use crate::integration::app::test_prerequisites;
 
 #[test]
 fn test_graceful_shutdown() {
+    let paths = test_prerequisites::get_test_paths().unwrap();
     println!("RUNNING: test_graceful_shutdown - Testing graceful shutdown with SIGINT signal");
     println!("Testing graceful shutdown with SIGINT (3 seconds)...");
 
-    let paths = test_prerequisites::get_test_paths().unwrap();
 
     // Read TIME_INTERVAL from config
     let config_content =
@@ -51,10 +51,10 @@ fn test_graceful_shutdown() {
 
 #[test]
 fn test_cleanup_on_exit() {
+    let paths = test_prerequisites::get_test_paths().unwrap();
     println!("RUNNING: test_cleanup_on_exit - Testing cleanup on forced process termination");
     println!("Testing cleanup on forced exit...");
 
-    let paths = test_prerequisites::get_test_paths().unwrap();
 
     let mut child = Command::new(&paths.binary_path)
         .env("TIME_INTERVAL", "10")
