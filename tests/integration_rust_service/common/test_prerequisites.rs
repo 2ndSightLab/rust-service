@@ -19,7 +19,7 @@
 //
 ////////////////////////////////////////////////////////////////
 
-use rust_service::service::config_reader::load_config;
+use rust_service::service::load_config;
 use std::fs;
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;

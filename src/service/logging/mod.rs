@@ -2,10 +2,10 @@
 //
 //  Name: mod
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/service/mod.rs
+//  File: src/service/logging/mod.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
-//  Service module declarations
+//  Logging module declarations
 //
 //  This software, which includes components generated with the assistance of artificial
 //  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,13 +19,6 @@
 //
 ////////////////////////////////////////////////////////////////
 
-pub mod config;
-pub mod errors;
-pub mod exec;
-pub mod logging;
-pub mod monitoring;
-pub mod security;
+pub mod file_logger;
 
-pub use config::{Config, load_action_config, load_config};
-pub use errors::*;
-pub use exec::*;
+pub use file_logger::*;

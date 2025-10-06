@@ -1,11 +1,11 @@
 ////////////////////////////////////////////////////////////////
 //
-//  Name: uid
+//  Name: mod
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/security/uid.rs
+//  File: src/service/errors/mod.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
-//  User ID operations
+//  Error module declarations
 //
 //  This software, which includes components generated with the assistance of artificial
 //  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,31 +19,6 @@
 //
 ////////////////////////////////////////////////////////////////
 
-use crate::service::service_error::ServiceError;
+pub mod service_errors;
 
-/// Gets the current user ID.
-///
-/// # Errors
-/// Returns `ServiceError::Config` if unable to get the current user ID.
-pub fn get_current_uid() -> Result<u32, ServiceError> {
-    #[cfg(unix)]
-    {
-        // SAFETY: getuid() is always safe - it cannot fail and has no side effects
-        let UID = unsafe { libc::getuid() };
-
-        // Validate UID is reasonable (not overflow value)
-        if UID == u32::MAX {
-            return Err(ServiceError::Config(
-                "Invalid UID returned by system".to_string(),
-            ));
-        }
-
-        Ok(UID)
-    }
-    #[cfg(not(unix))]
-    {
-        Err(ServiceError::Config(
-            "UID operations not supported on this platform".to_string(),
-        ))
-    }
-}
+pub use service_errors::*;

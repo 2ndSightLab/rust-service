@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////
 //
-//  Name: monitoring
+//  Name: resource_monitor
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/service/monitoring.rs
+//  File: src/service/monitoring/resource_monitor.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
 //  System resource monitoring
@@ -19,8 +19,8 @@
 //
 ////////////////////////////////////////////////////////////////
 
-use crate::service::config::Config;
-use crate::service::service_error::ServiceError;
+use crate::service::config::service_config::Config;
+use crate::service::errors::ServiceError;
 use log::warn;
 use std::fs;
 

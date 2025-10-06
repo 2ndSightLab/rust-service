@@ -87,19 +87,20 @@ The code is organized into modular components:
 * `src/main.rs` - Application entry point and orchestration
 * `src/lib.rs` - Library interface and module exports
 * `src/service/` - Core service modules:
-  * `config.rs` - Service configuration structure and validation
-  * `config_reader.rs` - Configuration loading from system directories
-  * `error.rs` - Custom error types using thiserror
-  * `logging.rs` - File logging with security checks
-  * `monitoring.rs` - System resource monitoring
-  * `run.rs` - Service runner implementation
+  * `config/` - Configuration modules:
+    * `service_config.rs` - Service configuration structure and validation
+    * `config_reader.rs` - Configuration loading from system directories
+    * `config_errors.rs` - Configuration error types
+  * `errors/` - Error handling modules
+  * `logging/` - Logging modules:
+    * `file_logger.rs` - File logging with security checks
+  * `monitoring/` - System resource monitoring modules:
+    * `resource_monitor.rs` - Memory and disk usage monitoring
+  * `security/` - Security validation modules
+  * `exec.rs` - Service execution implementation
 * `src/action/` - Action modules:
   * `config.rs` - Action configuration structure and validation
   * `exec.rs` - Action execution implementation
-* `src/security/` - Security validation modules:
-  * `uid.rs` - User ID operations
-  * `limits.rs` - System limits checking
-  * `validation.rs` - Security validation functions
 
 __Dependencies__
 

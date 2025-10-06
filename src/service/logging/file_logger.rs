@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////
 //
-//  Name: logging
+//  Name: file_logger
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/service/logging.rs
+//  File: src/service/logging/file_logger.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
 //  File logging with security checks
@@ -19,9 +19,9 @@
 //
 ////////////////////////////////////////////////////////////////
 
-use crate::security::validation::sanitize_message;
-use crate::service::config::Config;
-use crate::service::service_error::ServiceError;
+use crate::service::config::service_config::Config;
+use crate::service::errors::ServiceError;
+use crate::service::security::validation::sanitize_message;
 use std::fs;
 use std::io::{Seek, SeekFrom, Write};
 use std::path::Path;
@@ -188,7 +188,7 @@ fn write_to_log_file(LOG_FILE_PATH: &str, MESSAGE: &str) -> Result<(), ServiceEr
         // SECURITY: FILE.metadata() calls fstat() on the file descriptor, not the path
         let METADATA = map_io_error(FILE.metadata(), "Cannot get file metadata")?;
 
-        let CURRENT_UID = crate::security::get_current_uid()
+        let CURRENT_UID = crate::service::security::get_current_uid()
             .map_err(|e| ServiceError::Config(format!("Cannot get current UID: {e}")))?;
         if !METADATA.file_type().is_file() || METADATA.uid() != CURRENT_UID {
             return Err(ServiceError::Config(

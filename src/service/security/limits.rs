@@ -2,7 +2,7 @@
 //
 //  Name: limits
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/security/limits.rs
+//  File: src/service/security/limits.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
 //  System limits checking functions
@@ -19,7 +19,7 @@
 //
 ////////////////////////////////////////////////////////////////
 
-use crate::service::service_error::ServiceError;
+use crate::service::errors::ServiceError;
 
 pub fn get_file_descriptor_limit() -> Result<u64, ServiceError> {
     #[cfg(unix)]

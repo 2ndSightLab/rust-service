@@ -2,7 +2,7 @@
 //
 //  Name: config_error
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/service/config_error.rs
+//  File: src/service/config/config_errors.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
 //  Configuration error types

@@ -2,7 +2,7 @@
 //
 //  Name: config_reader
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/service/config_reader.rs
+//  File: src/service/config/config_reader.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
 //  Configuration loading from system directories
@@ -20,11 +20,11 @@
 ////////////////////////////////////////////////////////////////
 
 use crate::action::config::ActionConfig;
-use crate::security::validation::read_config_file;
-pub use crate::service::config::{
+pub use crate::service::config::service_config::{
     Config, get_config_file_name as get_service_config_file_name, validate_all_config_fields,
 };
-use crate::service::service_error::ServiceError;
+use crate::service::errors::ServiceError;
+use crate::service::security::validation::read_config_file;
 use std::path::Path;
 
 /// Generic function to load config from executable directory by filename
@@ -60,7 +60,7 @@ fn load_config_by_filename(filename: &str) -> Result<String, ServiceError> {
 /// - Config file has invalid permissions or format
 /// - Configuration values fail validation checks
 pub fn load_config() -> Result<Config, ServiceError> {
-    let FILENAME = crate::service::config::get_config_file_name();
+    let FILENAME = get_service_config_file_name();
     let CONTENT = load_config_by_filename(FILENAME)?;
 
     let CONFIG: Config = toml::from_str(&CONTENT)

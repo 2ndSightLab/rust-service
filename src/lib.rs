@@ -20,7 +20,6 @@
 ////////////////////////////////////////////////////////////////
 
 pub mod action;
-pub mod security;
 pub mod service;
 
 pub use action::exec::Action;

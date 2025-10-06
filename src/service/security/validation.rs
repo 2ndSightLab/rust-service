@@ -2,7 +2,7 @@
 //
 //  Name: validation
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/security/validation.rs
+//  File: src/service/security/validation.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
 //  Security validation functions
@@ -21,8 +21,8 @@
 
 use super::limits::get_file_descriptor_limit;
 use super::uid::get_current_uid;
-use crate::service::config::Config;
-use crate::service::service_error::ServiceError;
+use crate::service::config::service_config::Config;
+use crate::service::errors::ServiceError;
 use std::fs;
 use std::path::{Path, PathBuf};
 

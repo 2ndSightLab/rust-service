@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////////////
 //
-//  Name: config
+//  Name: service_config
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/service/config.rs
+//  File: src/service/config/service_config.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
 //  Service configuration structure and validation
@@ -19,8 +19,8 @@
 //
 ////////////////////////////////////////////////////////////////
 
-use crate::security::validation::{sanitize_message, validate_config_field};
-use crate::service::service_error::ServiceError;
+use crate::service::errors::ServiceError;
+use crate::service::security::validation::{sanitize_message, validate_config_field};
 use serde::Deserialize;
 use std::fs;
 

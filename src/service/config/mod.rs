@@ -2,10 +2,10 @@
 //
 //  Name: mod
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/security/mod.rs
+//  File: src/service/config/mod.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
-//  Security module declarations
+//  Configuration module declarations
 //
 //  This software, which includes components generated with the assistance of artificial
 //  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,11 +19,10 @@
 //
 ////////////////////////////////////////////////////////////////
 
-mod limits;
-mod uid;
-pub mod validation;
+pub mod config_errors;
+pub mod config_reader;
+pub mod service_config;
 
-pub use uid::get_current_uid;
-pub use validation::{
-    validate_path_without_symlinks, validate_runtime_security, validate_service_user,
-};
+pub use config_errors::ConfigError;
+pub use config_reader::{load_action_config, load_config};
+pub use service_config::Config;

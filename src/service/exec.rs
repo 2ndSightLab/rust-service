@@ -1,11 +1,11 @@
 ////////////////////////////////////////////////////////////////
 //
-//  Name: run
+//  Name: exec
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/service/run.rs
+//  File: src/service/exec.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
-//  Service runner implementation
+//  Service execution implementation
 //
 //  This software, which includes components generated with the assistance of artificial
 //  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -29,10 +29,10 @@ use std::{
     time::Duration,
 };
 
-use crate::service::config_reader::load_config;
+use crate::service::config::config_reader::load_config;
 use crate::service::{ServiceError, monitoring};
 
-pub use crate::service::config::Config;
+pub use crate::service::config::service_config::Config;
 
 /// Trait for service-specific configuration
 pub trait ServiceConfig: Clone + Send + Sync + 'static {
@@ -88,7 +88,7 @@ impl<C: ServiceConfig> ServiceRunner<C> {
         let CONFIG = C::load()?;
 
         // Check system resources before starting
-        if let Ok(config) = crate::service::config_reader::load_config() {
+        if let Ok(config) = load_config() {
             monitoring::check_resources(&config)?;
         }
 
