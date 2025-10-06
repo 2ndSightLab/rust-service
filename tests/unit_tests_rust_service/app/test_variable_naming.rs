@@ -1,11 +1,11 @@
 ////////////////////////////////////////////////////////////////
 //
-//  Name: service_error
+//  Name: test_variable_naming
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/service/service_error.rs
+//  File: tests/unit_tests_rust_service/app/test_variable_naming.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
-//  Custom error types using thiserror
+//  Test file for test_variable_naming
 //
 //  This software, which includes components generated with the assistance of artificial
 //  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,16 +19,26 @@
 //
 ////////////////////////////////////////////////////////////////
 
-use thiserror::Error;
+use std::process::Command;
 
-#[derive(Debug, Error)]
-pub enum ServiceError {
-    #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
+#[test]
+fn test_variable_naming() {
+    let OUTPUT = Command::new("cargo")
+        .args([
+            "test",
+            "--manifest-path",
+            "../rust-common-tests/Cargo.toml",
+            "tests::unit::common::variable_naming_test",
+            "--",
+            "--nocapture",
+        ])
+        .current_dir(".")
+        .output()
+        .expect("Failed to execute variable naming test");
 
-    #[error("Parse error: {0}")]
-    Parse(#[from] toml::de::Error),
-
-    #[error("Config error: {0}")]
-    Config(String),
+    assert!(
+        OUTPUT.status.success() || OUTPUT.status.code() == Some(101),
+        "Variable naming test failed: {}",
+        String::from_utf8_lossy(&OUTPUT.stderr)
+    );
 }

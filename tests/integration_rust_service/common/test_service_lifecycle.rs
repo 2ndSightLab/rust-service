@@ -1,11 +1,11 @@
 ////////////////////////////////////////////////////////////////
 //
-//  Name: service_error
+//  Name: test_service_lifecycle
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/service/service_error.rs
+//  File: tests/integration_rust_service/common/test_service_lifecycle.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
-//  Custom error types using thiserror
+//  Test file for test_service_lifecycle
 //
 //  This software, which includes components generated with the assistance of artificial
 //  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,16 +19,33 @@
 //
 ////////////////////////////////////////////////////////////////
 
-use thiserror::Error;
+use super::test_prerequisites;
+use std::fs;
 
-#[derive(Debug, Error)]
-pub enum ServiceError {
-    #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
+#[test]
+fn test_service_binary_exists() {
+    println!("RUNNING: test_service_binary_exists - Testing service binary installation");
+    let PATHS = test_prerequisites::get_test_paths().unwrap();
 
-    #[error("Parse error: {0}")]
-    Parse(#[from] toml::de::Error),
+    assert!(
+        fs::metadata(&PATHS.binary).is_ok(),
+        "Binary should exist at {}",
+        PATHS.binary
+    );
 
-    #[error("Config error: {0}")]
-    Config(String),
+    println!("Service binary validation completed");
+}
+
+#[test]
+fn test_service_config_exists() {
+    println!("RUNNING: test_service_config_exists - Testing service configuration installation");
+    let PATHS = test_prerequisites::get_test_paths().unwrap();
+
+    assert!(
+        fs::metadata(&PATHS.config).is_ok(),
+        "Config should exist at {}",
+        PATHS.config
+    );
+
+    println!("Service config validation completed");
 }

@@ -1,11 +1,11 @@
 ////////////////////////////////////////////////////////////////
 //
-//  Name: service_error
+//  Name: unit_tests_rust_service
 //  GitHub repository: https://github.com/2ndSightLab/rust-service.git
-//  File: src/service/service_error.rs
+//  File: tests/unit_tests_rust_service.rs
 //  Copyright: © 2025 2nd Sight Lab, LLC
 //
-//  Custom error types using thiserror
+//  Test file for unit_tests_rust_service
 //
 //  This software, which includes components generated with the assistance of artificial
 //  intelligence, is free for personal, educational, and non-profit use, provided that
@@ -19,16 +19,15 @@
 //
 ////////////////////////////////////////////////////////////////
 
-use thiserror::Error;
-
-#[derive(Debug, Error)]
-pub enum ServiceError {
-    #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
-
-    #[error("Parse error: {0}")]
-    Parse(#[from] toml::de::Error),
-
-    #[error("Config error: {0}")]
-    Config(String),
+mod unit_tests_rust_service {
+    pub mod app {
+        pub mod test_best_practices;
+        pub mod test_config_standards;
+        pub mod test_config_tests;
+        pub mod test_monitoring_tests;
+        pub mod test_monitoring_unit_tests;
+        pub mod test_script_validation;
+        pub mod test_toml_lint;
+        pub mod test_variable_naming;
+    }
 }
