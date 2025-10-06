@@ -1,15 +1,15 @@
 mod common;
 
-mod unit {
+mod unit_test {
     pub mod app {
-        pub mod config_tests;
-        pub mod monitoring_tests;
-        pub mod monitoring_unit_tests;
+        pub mod test_best_practices;
         pub mod test_config_standards;
+        pub mod test_config_tests;
+        pub mod test_monitoring_tests;
+        pub mod test_monitoring_unit_tests;
+        pub mod test_script_validation;
         pub mod test_toml_lint;
         pub mod test_variable_naming;
-        pub mod test_best_practices;
-        pub mod test_script_validation;
     }
 }
 

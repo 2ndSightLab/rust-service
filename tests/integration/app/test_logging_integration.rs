@@ -7,10 +7,10 @@ fn test_log_file_creation() {
     println!("RUNNING: test_log_file_creation - Testing log file creation and permissions");
     println!("Testing log file creation...");
 
-    let paths = test_prerequisites::get_test_paths().unwrap();
+    let PATHS = test_prerequisites::get_test_paths().unwrap();
 
     println!("Starting service...");
-    let mut child = Command::new(&paths.binary_path)
+    let mut CHILD = Command::new(&PATHS.binary)
         .spawn()
         .expect("Failed to start service");
 
@@ -18,40 +18,40 @@ fn test_log_file_creation() {
     std::thread::sleep(std::time::Duration::from_secs(3));
 
     println!("Stopping service...");
-    child.kill().expect("Failed to kill service");
-    let _ = child.wait();
+    CHILD.kill().expect("Failed to kill service");
+    let _ = CHILD.wait();
 
     // Check for log files in common log directories
-    let log_dirs = [
+    let LOG_DIRS = [
         "/var/log/test-rust-service-debug",
         "/var/log/test-rust-service",
     ];
 
-    for log_dir in &log_dirs {
-        if let Ok(entries) = fs::read_dir(log_dir) {
-            let log_files: Vec<_> = entries
-                .filter_map(|entry| {
-                    let entry = entry.ok()?;
-                    let name = entry.file_name().to_string_lossy().to_string();
-                    if std::path::Path::new(&name)
+    for LOG_DIR in &LOG_DIRS {
+        if let Ok(ENTRIES) = fs::read_dir(LOG_DIR) {
+            let LOG_FILES: Vec<_> = ENTRIES
+                .filter_map(|ENTRY| {
+                    let ENTRY = ENTRY.ok()?;
+                    let NAME = ENTRY.file_name().to_string_lossy().to_string();
+                    if std::path::Path::new(&NAME)
                         .extension()
                         .is_some_and(|ext| ext.eq_ignore_ascii_case("log"))
                     {
-                        Some(name)
+                        Some(NAME)
                     } else {
                         None
                     }
                 })
                 .collect();
 
-            if log_files.is_empty() {
+            if LOG_FILES.is_empty() {
                 println!("No log files found yet - service may not have had time to create them");
             } else {
-                println!("Found log files: {log_files:?}");
+                println!("Found log files: {LOG_FILES:?}");
             }
             break;
         }
-        println!("Log directory {log_dir} not accessible - this is expected in test environment");
+        println!("Log directory {LOG_DIR} not accessible - this is expected in test environment");
     }
 
     println!("Log file creation test completed");

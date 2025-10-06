@@ -22,12 +22,6 @@ pub trait ServiceConfig: Clone + Send + Sync + 'static {
     fn load() -> Result<Self, ServiceError>;
     fn service_name(&self) -> &str;
     fn log_file_path(&self) -> &str;
-
-    /// Optional time interval for periodic operations (default: 5 seconds)
-    /// Override this method only if your service needs periodic operations
-    fn time_interval(&self) -> u64 {
-        5
-    }
 }
 
 /// Action trait for extensible service functionality
@@ -88,15 +82,17 @@ impl<C: ServiceConfig> ServiceRunner<C> {
 
         info!("Starting {}", CONFIG.service_name());
 
-        while RUNNING.load(Ordering::SeqCst) {
-            thread::sleep(Duration::from_secs(CONFIG.time_interval()));
-            if RUNNING.load(Ordering::SeqCst) {
-                for action in &self.actions {
-                    if let Err(e) = action.execute(&CONFIG) {
-                        log::error!("Action '{}' failed: {}", action.name(), e);
-                    }
-                }
+        // Start all actions - they handle their own execution patterns
+        for action in &self.actions {
+            if let Err(e) = action.execute(&CONFIG) {
+                log::error!("Action failed: {e}");
+                return Err(e.into());
             }
+        }
+
+        // Wait for shutdown signal
+        while RUNNING.load(Ordering::SeqCst) {
+            thread::sleep(Duration::from_millis(100));
         }
 
         info!("Service shutting down gracefully");
@@ -112,20 +108,6 @@ impl ServiceConfig for Config {
 
     fn service_name(&self) -> &str {
         &self.SERVICE_NAME
-    }
-
-    fn time_interval(&self) -> u64 {
-        let ACTION_CONFIG =
-            crate::service::config_reader::load_action_config().unwrap_or_else(|_| {
-                crate::action::config::ActionConfig {
-                    MESSAGE: "Default message".to_string(),
-                    MAX_MESSAGE_LEN: 500,
-                    TIME_INTERVAL: 5,
-                    MAX_TIME_INTERVAL: 86400,
-                    DEFAULT_MESSAGE_LEN: 100,
-                }
-            });
-        ACTION_CONFIG.TIME_INTERVAL
     }
 
     fn log_file_path(&self) -> &str {

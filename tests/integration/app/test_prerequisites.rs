@@ -4,63 +4,77 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 
 pub struct TestPaths {
-    pub binary_path: String,
-    pub config_path: String,
+    pub binary: String,
+    pub config: String,
+    pub action_config: String,
 }
 
 pub fn get_test_paths() -> Result<TestPaths, String> {
     // Use application's config loading function
-    let config = load_config().map_err(|e| format!("Failed to load config: {e}"))?;
+    let CONFIG = load_config().map_err(|e| format!("Failed to load config: {e}"))?;
+
+    // For library projects, use executable directory for configs
+    let EXE_PATH =
+        std::env::current_exe().map_err(|e| format!("Cannot determine executable path: {e}"))?;
+    let EXE_DIR = EXE_PATH
+        .parent()
+        .ok_or_else(|| "Cannot determine executable directory".to_string())?;
+
+    let LOCAL_CONFIG_DIR = EXE_DIR
+        .to_str()
+        .ok_or_else(|| "Invalid executable directory path".to_string())?;
 
     // Extract paths from loaded config
-    let install_dir = &config.INSTALL_DIR;
-    let config_dir = &config.CONFIG_DIR;
+    let INSTALL_DIR = &CONFIG.INSTALL_DIR;
 
     // Check if debug installation exists, otherwise use release
-    let debug_binary = format!("{install_dir}-debug/test-rust-service");
-    let debug_config = format!("{config_dir}-debug/service.toml");
+    let DEBUG_BINARY = format!("{INSTALL_DIR}-debug/test-rust-service");
+    let DEBUG_CONFIG = format!("{LOCAL_CONFIG_DIR}/service.toml");
+    let DEBUG_ACTION_CONFIG = format!("{LOCAL_CONFIG_DIR}/action.toml");
 
-    let (binary_path, config_path) = if Path::new(&debug_binary).exists() {
-        (debug_binary, debug_config)
+    let (BINARY_PATH, CONFIG_PATH, ACTION_CONFIG_PATH) = if Path::new(&DEBUG_BINARY).exists() {
+        (DEBUG_BINARY, DEBUG_CONFIG, DEBUG_ACTION_CONFIG)
     } else {
         (
-            format!("{install_dir}/test-rust-service"),
-            format!("{config_dir}/service.toml"),
+            format!("{INSTALL_DIR}/test-rust-service"),
+            format!("{LOCAL_CONFIG_DIR}/service.toml"),
+            format!("{LOCAL_CONFIG_DIR}/action.toml"),
         )
     };
 
     Ok(TestPaths {
-        binary_path,
-        config_path,
+        binary: BINARY_PATH,
+        config: CONFIG_PATH,
+        action_config: ACTION_CONFIG_PATH,
     })
 }
 
 pub fn check_debug_installation() -> Result<(), String> {
-    let paths = get_test_paths()?;
+    let PATHS = get_test_paths()?;
 
     // Check if binary exists
-    if fs::metadata(&paths.binary_path).is_err() {
+    if fs::metadata(&PATHS.binary).is_err() {
         return Err(format!(
             "Binary not found at {}. Run './actions/test.sh' to install it.",
-            paths.binary_path
+            PATHS.binary
         ));
     }
 
     // Check if config exists
-    if fs::metadata(&paths.config_path).is_err() {
+    if fs::metadata(&PATHS.config).is_err() {
         return Err(format!(
             "Config not found at {}. Run './actions/test.sh' to install it.",
-            paths.config_path
+            PATHS.config
         ));
     }
 
     // Check if binary is executable
-    let metadata = fs::metadata(&paths.binary_path)
-        .map_err(|e| format!("Cannot access binary {}: {e}", paths.binary_path))?;
+    let METADATA = fs::metadata(&PATHS.binary)
+        .map_err(|e| format!("Cannot access binary {}: {e}", PATHS.binary))?;
 
-    let permissions = metadata.permissions();
-    if permissions.mode() & 0o111 == 0 {
-        return Err(format!("Binary {} is not executable", paths.binary_path));
+    let PERMISSIONS = METADATA.permissions();
+    if PERMISSIONS.mode() & 0o111 == 0 {
+        return Err(format!("Binary {} is not executable", PATHS.binary));
     }
 
     Ok(())

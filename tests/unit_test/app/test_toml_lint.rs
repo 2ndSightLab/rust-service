@@ -2,8 +2,8 @@ use std::process::Command;
 
 #[test]
 fn test_toml_lint() {
-    let output = Command::new("cargo")
-        .args(&[
+    let OUTPUT = Command::new("cargo")
+        .args([
             "test",
             "--manifest-path",
             "../rust-common-tests/Cargo.toml",
@@ -16,8 +16,8 @@ fn test_toml_lint() {
         .expect("Failed to execute TOML lint test");
 
     assert!(
-        output.status.success() || output.status.code() == Some(101),
+        OUTPUT.status.success() || OUTPUT.status.code() == Some(101),
         "TOML lint test failed: {}",
-        String::from_utf8_lossy(&output.stderr)
+        String::from_utf8_lossy(&OUTPUT.stderr)
     );
 }

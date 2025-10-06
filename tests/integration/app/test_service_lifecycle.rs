@@ -4,12 +4,12 @@ use std::fs;
 #[test]
 fn test_service_binary_exists() {
     println!("RUNNING: test_service_binary_exists - Testing service binary installation");
-    let paths = test_prerequisites::get_test_paths().unwrap();
+    let PATHS = test_prerequisites::get_test_paths().unwrap();
 
     assert!(
-        fs::metadata(&paths.binary_path).is_ok(),
+        fs::metadata(&PATHS.binary).is_ok(),
         "Binary should exist at {}",
-        paths.binary_path
+        PATHS.binary
     );
 
     println!("Service binary validation completed");
@@ -18,12 +18,12 @@ fn test_service_binary_exists() {
 #[test]
 fn test_service_config_exists() {
     println!("RUNNING: test_service_config_exists - Testing service configuration installation");
-    let paths = test_prerequisites::get_test_paths().unwrap();
+    let PATHS = test_prerequisites::get_test_paths().unwrap();
 
     assert!(
-        fs::metadata(&paths.config_path).is_ok(),
+        fs::metadata(&PATHS.config).is_ok(),
         "Config should exist at {}",
-        paths.config_path
+        PATHS.config
     );
 
     println!("Service config validation completed");

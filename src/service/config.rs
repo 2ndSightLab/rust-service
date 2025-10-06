@@ -13,7 +13,6 @@ pub const fn get_config_file_name() -> &'static str {
 pub struct Config {
     pub LOG_FILE_PATH: String,
     pub INSTALL_DIR: String,
-    pub CONFIG_DIR: String,
     pub SERVICE_NAME: String,
     pub MEMORY_THRESHOLD: u32,
     pub DISK_THRESHOLD: u32,
@@ -22,7 +21,6 @@ pub struct Config {
     pub MAX_LOG_PATH_LEN: usize,
     pub MIN_LOG_INTERVAL_MS: u64,
     pub MAX_LOG_FILE_SIZE: u64,
-    pub MAX_TIME_INTERVAL: u64,
     pub MAX_THRESHOLD_PERCENT: u32,
     pub MAX_FD_LIMIT: u64,
     pub MAX_CONFIG_FIELD_LEN: usize,
@@ -52,12 +50,6 @@ pub fn validate_all_config_fields(config: &Config) -> Result<(), ServiceError> {
         &1,
         &config.MAX_LOG_PATH_LEN,
         "install_dir",
-    )?;
-    validate_config_field(
-        &config.CONFIG_DIR.len(),
-        &1,
-        &config.MAX_LOG_PATH_LEN,
-        "config_dir",
     )?;
     validate_config_field(
         &config.MEMORY_THRESHOLD,
@@ -93,28 +85,31 @@ pub fn validate_all_config_fields(config: &Config) -> Result<(), ServiceError> {
 }
 
 /// Loads configuration from executable directory with validation against secure paths
+///
+/// # Errors
+/// Returns `ServiceError` if configuration cannot be loaded or is invalid.
 pub fn load_secure_config() -> Result<Config, ServiceError> {
     // Validate paths against secure directories: "/var/log", "/opt"
-    let exe_path = std::env::current_exe()
+    let EXE_PATH = std::env::current_exe()
         .map_err(|e| ServiceError::Config(format!("Cannot determine executable path: {e}")))?;
 
-    let exe_dir = exe_path
+    let EXE_DIR = EXE_PATH
         .parent()
         .ok_or_else(|| ServiceError::Config("Cannot determine executable directory".to_string()))?;
 
-    let config_path = exe_dir.join("service.toml");
+    let CONFIG_PATH = EXE_DIR.join("service.toml");
 
-    if !config_path.exists() {
+    if !CONFIG_PATH.exists() {
         return Err(ServiceError::Config(
             "No valid config file found".to_string(),
         ));
     }
 
     // Open file first to get file descriptor
-    let FILE = fs::File::open(&config_path).map_err(|e| {
+    let FILE = fs::File::open(&CONFIG_PATH).map_err(|e| {
         ServiceError::Config(format!(
             "Failed to open config file {}: {e}",
-            config_path.display()
+            CONFIG_PATH.display()
         ))
     })?;
 
@@ -123,12 +118,12 @@ pub fn load_secure_config() -> Result<Config, ServiceError> {
         .metadata()
         .map_err(|e| ServiceError::Config(format!("Cannot read config file metadata: {e}")))?;
 
-    let content = fs::read_to_string(&config_path)
+    let CONTENT = fs::read_to_string(&CONFIG_PATH)
         .map_err(|e| ServiceError::Config(format!("Failed to read config file: {e}")))?;
 
-    let config: Config =
-        toml::from_str(&content).map_err(|e| ServiceError::Config(format!("Invalid TOML: {e}")))?;
+    let CONFIG: Config =
+        toml::from_str(&CONTENT).map_err(|e| ServiceError::Config(format!("Invalid TOML: {e}")))?;
 
-    validate_all_config_fields(&config)?;
-    Ok(config)
+    validate_all_config_fields(&CONFIG)?;
+    Ok(CONFIG)
 }

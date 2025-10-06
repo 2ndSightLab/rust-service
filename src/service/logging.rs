@@ -69,15 +69,12 @@ impl log::Log for FileLogger {
         }
         LAST_LOG_TIME.store(NOW, Ordering::Relaxed);
 
-        // Get configurable message length limit from action config
-        let ACTION_CONFIG = crate::service::config_reader::load_action_config().unwrap_or_default();
-        let MAX_MSG_LEN = ACTION_CONFIG.MAX_MESSAGE_LEN;
+        // Use default message length limit for library
+        let MAX_MSG_LEN = 500;
 
         // Sanitize message with configurable length using whitelist approach
-        let ESCAPED_MSG = match sanitize_message(&record.args().to_string(), MAX_MSG_LEN) {
-            Ok(msg) => msg,
-            Err(_) => "Invalid message".to_string(),
-        };
+        let ESCAPED_MSG = sanitize_message(&record.args().to_string(), MAX_MSG_LEN)
+            .unwrap_or_else(|_| "Invalid message".to_string());
 
         let MESSAGE = format!("[{}] [{}] {ESCAPED_MSG}", NOW / 1000, record.level());
         println!("{MESSAGE}");

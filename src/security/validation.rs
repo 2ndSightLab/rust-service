@@ -41,6 +41,9 @@ pub fn sanitize_message(MESSAGE: &str, MAX_LEN: usize) -> Result<String, Service
 }
 
 /// Validates a path without following symlinks to prevent directory traversal attacks
+///
+/// # Errors
+/// Returns `ServiceError` if the path contains symlinks or cannot be validated.
 pub fn validate_path_without_symlinks(path: &Path) -> Result<PathBuf, ServiceError> {
     // Get the absolute path without following symlinks
     let ABSOLUTE_PATH = if path.is_absolute() {

@@ -3,17 +3,16 @@ use rust_service::service::Config;
 
 #[test]
 fn test_service_config_loading() {
-    // Create a test config file in the executable directory for testing
-    let exe_path = std::env::current_exe().expect("Cannot get executable path");
-    let exe_dir = exe_path.parent().expect("Cannot get executable directory");
-    let config_path = exe_dir.join("service.toml");
+    // Try to load deployed config, create test config if it doesn't exist
+    let CONFIG = load_config().unwrap_or_else(|_| {
+        // Create a test config file in the executable directory
+        let EXE_PATH = std::env::current_exe().expect("Cannot get executable path");
+        let EXE_DIR = EXE_PATH.parent().expect("Cannot get executable directory");
+        let CONFIG_PATH = EXE_DIR.join("service.toml");
 
-    // Create test config if it doesn't exist
-    if !config_path.exists() {
-        let test_config = r#"
+        let TEST_CONFIG = r#"
 LOG_FILE_PATH = "/var/log/rust-service"
 INSTALL_DIR = "/opt/rust-service"
-CONFIG_DIR = "/etc/rust-service"
 SERVICE_NAME = "test-service"
 MEMORY_THRESHOLD = 80
 DISK_THRESHOLD = 75
@@ -22,31 +21,29 @@ MAX_SERVICE_NAME_LEN = 32
 MAX_LOG_PATH_LEN = 500
 MIN_LOG_INTERVAL_MS = 100
 MAX_LOG_FILE_SIZE = 10485760
-MAX_TIME_INTERVAL = 86400
 MAX_THRESHOLD_PERCENT = 100
 MAX_FD_LIMIT = 65536
 MAX_CONFIG_FIELD_LEN = 2000
 "#;
-        std::fs::write(&config_path, test_config).expect("Failed to create test config");
-    }
-
-    let config = load_config().expect("Should load service config from executable directory");
+        std::fs::write(&CONFIG_PATH, TEST_CONFIG).expect("Failed to create test config");
+        load_config().expect("Should load test config")
+    });
 
     // Verify required fields are present and reasonable
     assert!(
-        !config.SERVICE_NAME.is_empty(),
+        !CONFIG.SERVICE_NAME.is_empty(),
         "Service name should not be empty"
     );
     assert!(
-        config.MEMORY_THRESHOLD > 0 && config.MEMORY_THRESHOLD <= 100,
+        CONFIG.MEMORY_THRESHOLD > 0 && CONFIG.MEMORY_THRESHOLD <= 100,
         "Memory threshold should be 1-100"
     );
     assert!(
-        config.DISK_THRESHOLD > 0 && config.DISK_THRESHOLD <= 100,
+        CONFIG.DISK_THRESHOLD > 0 && CONFIG.DISK_THRESHOLD <= 100,
         "Disk threshold should be 1-100"
     );
     assert!(
-        config.LOG_FILE_PATH.starts_with('/'),
+        CONFIG.LOG_FILE_PATH.starts_with('/'),
         "Log path should be absolute"
     );
 }
@@ -59,7 +56,6 @@ fn test_config_validation_valid() {
     let TOML_CONTENT = r#"
 LOG_FILE_PATH = "/tmp/test-logs"
 INSTALL_DIR = "/opt/rust-service"
-CONFIG_DIR = "/etc/rust-service"
 SERVICE_NAME = "test-service"
 MEMORY_THRESHOLD = 80
 DISK_THRESHOLD = 75
@@ -68,7 +64,6 @@ MAX_SERVICE_NAME_LEN = 32
 MAX_LOG_PATH_LEN = 500
 MIN_LOG_INTERVAL_MS = 100
 MAX_LOG_FILE_SIZE = 10485760
-MAX_TIME_INTERVAL = 86400
 MAX_THRESHOLD_PERCENT = 100
 MAX_FD_LIMIT = 65536
 MAX_CONFIG_FIELD_LEN = 2000
@@ -76,14 +71,13 @@ MAX_CONFIG_FIELD_LEN = 2000
     let PARSED: Config = toml::from_str(TOML_CONTENT).expect("Should parse valid config");
     assert_eq!(PARSED.SERVICE_NAME, "test-service");
     assert_eq!(PARSED.MEMORY_THRESHOLD, 80);
-    assert_eq!(PARSED.MAX_TIME_INTERVAL, 86400);
+    assert_eq!(PARSED.MAX_THRESHOLD_PERCENT, 100);
 }
 #[test]
 fn test_config_validation_invalid_service_name() {
     let TOML_CONTENT = r#"
 LOG_FILE_PATH = "/tmp/test"
 INSTALL_DIR = "/opt/rust-service"
-CONFIG_DIR = "/etc/rust-service"
 SERVICE_NAME = ""
 MEMORY_THRESHOLD = 80
 DISK_THRESHOLD = 80
@@ -92,7 +86,6 @@ MAX_SERVICE_NAME_LEN = 32
 MAX_LOG_PATH_LEN = 500
 MIN_LOG_INTERVAL_MS = 100
 MAX_LOG_FILE_SIZE = 10485760
-MAX_TIME_INTERVAL = 86400
 MAX_THRESHOLD_PERCENT = 100
 MAX_FD_LIMIT = 65536
 MAX_CONFIG_FIELD_LEN = 2000
@@ -107,7 +100,6 @@ fn test_config_validation_invalid_threshold() {
     let TOML_CONTENT = r#"
 LOG_FILE_PATH = "/tmp/test"
 INSTALL_DIR = "/opt/rust-service"
-CONFIG_DIR = "/etc/rust-service"
 SERVICE_NAME = "test"
 MEMORY_THRESHOLD = 101
 DISK_THRESHOLD = 80
@@ -116,7 +108,6 @@ MAX_SERVICE_NAME_LEN = 32
 MAX_LOG_PATH_LEN = 500
 MIN_LOG_INTERVAL_MS = 100
 MAX_LOG_FILE_SIZE = 10485760
-MAX_TIME_INTERVAL = 86400
 MAX_THRESHOLD_PERCENT = 100
 MAX_FD_LIMIT = 65536
 MAX_CONFIG_FIELD_LEN = 2000

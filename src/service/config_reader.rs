@@ -1,7 +1,4 @@
-pub use crate::action::config::{
-    ActionConfig, get_config_file_name as get_action_config_file_name,
-    validate_all_action_config_fields,
-};
+use crate::action::config::ActionConfig;
 use crate::security::validation::read_config_file;
 pub use crate::service::config::{
     Config, get_config_file_name as get_service_config_file_name, validate_all_config_fields,
@@ -11,25 +8,25 @@ use std::path::Path;
 
 /// Generic function to load config from executable directory by filename
 fn load_config_by_filename(filename: &str) -> Result<String, ServiceError> {
-    let exe_path = std::env::current_exe()
+    let EXE_PATH = std::env::current_exe()
         .map_err(|e| ServiceError::Config(format!("Cannot determine executable path: {e}")))?;
 
-    let exe_dir = exe_path
+    let EXE_DIR = EXE_PATH
         .parent()
         .ok_or_else(|| ServiceError::Config("Cannot determine executable directory".to_string()))?;
 
-    let config_path = exe_dir.join(filename);
+    let CONFIG_PATH = EXE_DIR.join(filename);
 
     // Only canonicalize if file exists to prevent directory traversal
-    let final_path = if config_path.exists() {
-        config_path
+    let FINAL_PATH = if CONFIG_PATH.exists() {
+        CONFIG_PATH
             .canonicalize()
             .map_err(|e| ServiceError::Config(format!("Cannot canonicalize config path: {e}")))?
     } else {
-        config_path
+        CONFIG_PATH
     };
 
-    read_config_file(&[final_path
+    read_config_file(&[FINAL_PATH
         .to_str()
         .ok_or_else(|| ServiceError::Config("Invalid config path".to_string()))?])
 }
@@ -79,20 +76,19 @@ pub fn load_config() -> Result<Config, ServiceError> {
         ));
     }
 
-    // Validate install and config directories
+    // Validate install directory
     let INSTALL_PATH = Path::new(&CONFIG.INSTALL_DIR);
-    let CONFIG_PATH_DIR = Path::new(&CONFIG.CONFIG_DIR);
 
-    if !INSTALL_PATH.is_absolute() || !CONFIG_PATH_DIR.is_absolute() {
+    if !INSTALL_PATH.is_absolute() {
         return Err(ServiceError::Config(
-            "Install and config paths must be absolute".to_string(),
+            "Install path must be absolute".to_string(),
         ));
     }
 
     Ok(CONFIG)
 }
 
-/// Loads and validates action configuration from system directories.
+/// Loads and validates action configuration from executable directory.
 ///
 /// # Errors
 /// Returns `ServiceError` if configuration cannot be loaded or is invalid.

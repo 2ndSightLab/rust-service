@@ -35,24 +35,24 @@ chrono = "0.4"
 rust-common-tests = { path = "../rust-common-tests" }
 
 [[test]]
-name = "integration"
-path = "tests/integration.rs"
+name = "integration_rust_service"
+path = "tests/integration_rust_service.rs"
 
 [[test]]
 name = "integration_common"
 path = "../rust-common-tests/tests/integration_common.rs"
 
 [[test]]
-name = "security_checks"
-path = "tests/security_checks.rs"
+name = "security_checks_rust_service"
+path = "tests/security_checks_rust_service.rs"
 
 [[test]]
 name = "security_checks_common"
 path = "../rust-common-tests/tests/security_checks_common.rs"
 
 [[test]]
-name = "unit"
-path = "tests/unit.rs"
+name = "unit_test_rust_service"
+path = "tests/unit_test_rust_service.rs"
 
 [[test]]
 name = "unit_tests_common"

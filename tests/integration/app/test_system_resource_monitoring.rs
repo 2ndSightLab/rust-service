@@ -2,8 +2,8 @@ use std::process::Command;
 
 #[test]
 fn test_system_resource_monitoring() {
-    let output = Command::new("cargo")
-        .args(&[
+    let OUTPUT = Command::new("cargo")
+        .args([
             "test",
             "--manifest-path",
             "../rust-common-tests/Cargo.toml",
@@ -16,8 +16,8 @@ fn test_system_resource_monitoring() {
         .expect("Failed to execute system resource monitoring test");
 
     assert!(
-        output.status.success() || output.status.code() == Some(101),
+        OUTPUT.status.success() || OUTPUT.status.code() == Some(101),
         "System resource monitoring test failed: {}",
-        String::from_utf8_lossy(&output.stderr)
+        String::from_utf8_lossy(&OUTPUT.stderr)
     );
 }

@@ -11,14 +11,11 @@ fn test_config_file_precedence() {
     println!("Testing configuration file discovery...");
 
     // Test that the application can successfully start and find its config
-    let paths = test_prerequisites::get_test_paths().unwrap();
+    let PATHS = test_prerequisites::get_test_paths().unwrap();
 
-    println!(
-        "Testing service startup with config from: {}",
-        paths.config_path
-    );
+    println!("Testing service startup with config from: {}", PATHS.config);
 
-    let mut child = Command::new(&paths.binary_path)
+    let mut CHILD = Command::new(&PATHS.binary)
         .spawn()
         .expect("Failed to start service - config loading may have failed");
 
@@ -26,8 +23,8 @@ fn test_config_file_precedence() {
     println!("Waiting 2 seconds to verify service runs...");
     std::thread::sleep(std::time::Duration::from_secs(2));
 
-    child.kill().expect("Failed to kill service");
-    let _ = child.wait();
+    CHILD.kill().expect("Failed to kill service");
+    let _ = CHILD.wait();
 
     println!("Config discovery test completed successfully");
 }
